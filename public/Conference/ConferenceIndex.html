@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html style="overflow:hidden;margin:0;">
+<head>
+	<meta charset="UTF-8">
+	<title>webrtc会议室</title>
+	<link rel="stylesheet" type="text/css" href="css/easyui.css">
+	<link rel="stylesheet" type="text/css" href="css/icon.css">
+	<link rel="stylesheet" type="text/css" href="css/demo.css">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+	<style>
+	.panel-title{
+		text-align:center;
+	}
+	</style>
+
+</head>
+<body style="overflow:hidden;margin:0;"width="100%" height="100%">
+	<div id="mainWindow"class="easyui-layout" >
+		<div id="leftWindow" data-options="region:'west',split:true" title="会议列表">
+			<div align="center"><a id="roomid1" href="http://221.6.31.42:42001/#roomName=1" target="conferenceRoom">会议室1</a></div>
+			<div align="center"><a href="http://221.6.31.42:42001/#roomName=2" target="conferenceRoom">会议室2</a></div>	
+			<div align="center"><a href="http://221.6.31.42:42001/#roomName=3" target="conferenceRoom">会议室3</a></div>
+			<div align="center"><a href="about:blank" target="conferenceRoom">退出会议</a></div>
+		</div>
+		<div id="rightWindow" data-options="region:'center',title:'会议室',iconCls:'icon-ok'">
+			<iframe name="conferenceRoom" style="width:100%;height:100%"></iframe>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+		var bodyHeight= window.innerHeight;
+		var mainWindow=document.getElementById("mainWindow");
+		var leftWindow=document.getElementById("leftWindow");
+		var rightWindow=document.getElementById("rightWindow");
+		
+		mainWindow.setAttribute("style","width:100%;height:"+bodyHeight+"px;");
+		leftWindow.setAttribute("style","width:15%;height:100%;");
+		rightWindow.setAttribute("style","width:85%;height:100%;");
+	</script>
+
+</body>
+</html>
