@@ -200,14 +200,12 @@ var SkyRTC = function() {
     skyrtc.prototype.createStream = function(options) {
         var that = this;
 
-        options.video = !!options.video;
-        options.audio = !!options.audio;
-		
+        //options.video = !!options.video;
+        //options.audio = !!options.audio;
 		console.log("options.video: "+options.video+" options.audio: "+options.audio);
-
         if (getUserMedia) {
             this.numStreams++;
-            getUserMedia.call(navigator,{"video": {"mandatory":{"maxWidth":"640","maxHeight":"360"},"optional":[]},"audio": false}, function(stream) {//options//{"video": {"mandatory":{"maxWidth":"683","maxHeight":"642"},"optional":[]},"audio": true}
+            getUserMedia.call(navigator,{"video": options.video,"audio": options.audio}, function(stream) {//options//{"video": {"mandatory":{"maxWidth":"683","maxHeight":"642"},"optional":[]},"audio": true}
                     that.localMediaStream = stream;
                     that.initializedStreams++;
                     that.emit("stream_created", stream);

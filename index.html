@@ -35,9 +35,284 @@
   var bodyWidth= window.innerWidth;//window.screen.width;//
   console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
   videoDiv1.setAttribute("style","position:absolute;height:100%;width:100%;");
-  /****************************LX****************************/
+  //成功创建WebSocket连接
+  rtc.on("connected", function(socket) {
+	var audio = request("audio");
+	var speaker = request("speaker");
+	var videoId = request("videoId");
+	audio=getParams(audio);
+	speaker=getParams(speaker);
+	console.info("音频状态是:"+audio+", speaker:"+speaker);
+	console.info("创建WebSocket的时候audio="+audio);
+	getCameraList();//获取摄像头列表
+	if (window.stream) {
+    	me.src = null;
+    	window.stream.stop();
+		console.log("videoElement: "+me);
+ 	 }
+
+    //创建本地视频流
+	if(videoId == "" || videoId == undefined || videoId == null){
+		rtc.createStream({//设置分辨率是320*180//684,513//640*480
+			video: {"mandatory":{"maxWidth":"1920","maxHeight":"1080"},"optional":[{"frameRate":60},{"aspectRatio":16/9}]},
+			audio: audio
+		});
+	}else{
+		rtc.createStream({//设置分辨率是320*180//684,513//640*480
+			video: {mandatory:{"maxWidth":"1920","maxHeight":"1080"},"optional": [{ "sourceId": videoId},{"aspectRatio":16/9}]},
+			audio: audio
+		});
+	}
+  });
   
-  function divScreen(num){
+  
+  //创建本地视频流成功
+  rtc.on("stream_created", function(stream) {
+    document.getElementById('me').src = URL.createObjectURL(stream);
+    document.getElementById('me').play();
+	/***********************LX************************/
+	divArray=document.getElementsByTagName("li");
+	console.info("创建本地视频的时候divArray.length是: "+divArray.length);
+	divArray[0].setAttribute("style","display:block;width:100%;height:100%;text-align:center;");
+	document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
+	/***********************end**********************/
+	//rtc.localMediaStream.stop();
+	//onload();
+	
+  });
+  
+	//页面重新加载
+  	function onload(){
+		if(location.href.indexOf('#reloaded')==-1){
+			location.href=location.href+"#reloaded";
+			location.reload();
+		}
+	}
+
+  //创建本地视频流失败
+  rtc.on("stream_create_error", function() {
+    alert("create stream failed!");
+  });
+  //接收到其他用户的视频流
+  rtc.on('pc_add_stream', function(stream, socketId) {
+	var videoSelect=new Array();
+    var newVideo = document.createElement("video"),
+        id = "other-" + socketId;
+   // newVideo.setAttribute("class", "other");
+    newVideo.setAttribute("autoplay", "autoplay");
+    newVideo.setAttribute("id", id);
+	var videoDiv = document.createElement("li");
+	videoDiv.setAttribute("id",id+"videoDiv");
+	videoDiv.appendChild(newVideo);
+    ul1.appendChild(videoDiv);
+	
+    rtc.attachStream(stream, id);
+	newVideo.ondblclick=function(event){
+		newVideo.webkitRequestFullScreen();
+	};
+	videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
+	console.info("现在一共有 "+videoNum+" 个视频");
+	
+	//divScreen(videoNum);
+	splitScreen();
+	//videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
+  	//divArray=document.getElementsByTagName("li");
+	//divScreen(videoNum);
+  });
+
+  //删除其他用户
+  rtc.on('remove_peer', function(socketId) {
+    var video = document.getElementById('other-' + socketId);
+	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
+    if(video){
+	  var videoNum=document.getElementsByTagName("video").length;
+	  var divArray=document.getElementsByTagName("li");
+	  var divLength=divArray.length;
+		for(var z=0;z<=divLength;z++){
+			console.info("div的长度------: "+divArray.length);
+			var appendDiv=document.getElementById("appendDiv"+z);
+			if(appendDiv){
+				console.info("删除appendDiv"+z);
+				appendDiv.parentNode.removeChild(appendDiv);
+			}
+	    }
+		video.parentNode.removeChild(video);
+		videoDiv.parentNode.removeChild(videoDiv);
+		//divScreen(videoNum);
+		splitScreen();
+    }
+  });
+  
+/*********************************************************挂断按钮设置*********************************************************/
+  
+  var hangupUser = document.getElementById("hangupUser");
+  hangupUser.onclick = function(){
+	hangUpMyself();
+  };
+  function hangUpMyself(){
+	rtc.closeAllPeerConnections();
+  }
+  
+  function getVideosNumber(){
+    var videoNumber = document.getElementsByTagName("video").length;
+	return videoNumber;
+  }
+  
+  
+/*********************************************************挂断按钮设置end******************************************************/
+  
+  function getConnection(){
+	//连接WebSocket服务器
+	var roomNum = request("roomNum");//获取参数roomNum
+	rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);//window.location.hash.slice(1)
+	console.log("连接 WebSocket服务器, "+"ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);
+  }
+  setTimeout("getConnection()",parseInt(1200*Math.random()));
+
+  //监听浏览器窗口的大小
+
+  var bigger = document.getElementById("bigger");
+  bigger.onclick=function(){
+		fullScreen();
+	};
+/*******************************************************获取摄像头列表begin**************************************************/
+	var  getCameraList = function(){
+	  var mediaElement = document.getElementById('me');
+      if (!MediaStreamTrack) document.body.innerHTML = '<h1>Incompatible Browser Detected. Try <strong style="color:red;">Chrome Canary</strong> instead.</h1>';
+      var videoSources = [];
+      MediaStreamTrack.getSources(function(media_sources) {
+        media_sources.forEach(function(media_source){
+          if (media_source.kind === 'video') {
+            videoSources.push(media_source);
+          }
+        });
+        getMediaSource(videoSources);
+      });
+
+      var get_and_show_media1 = function(id) {	  //给摄像头赋名称
+        var constraints = {};
+        constraints.video = {
+          mandatory:{"maxWidth":"1920","maxHeight":"1080"},
+          optional: [{ sourceId: id},{aspectRatio:16/9}]
+        };
+        navigator.webkitGetUserMedia(constraints, function(stream) {
+          var track = stream.getVideoTracks()[0];
+  		  console.log( "camera's name: "+ track.label +", camera's id is "+id);
+		  if(track.label == "Virtual Cam"){
+			$("#"+id).val("屏幕共享");
+			document.getElementById(id+"btnDiv").firstChild.src="/shexiangtou/icon_nei_wang.png";//获取摄像头的元素
+			console.log("document.getElementById().firstChild.src: "+document.getElementById().firstChild.src);
+		  }else{
+			$("#"+id).val(track.label);
+		}
+        }, function (e){
+          document.body.appendChild(document.createElement('hr'));
+          var strong = document.createElement('strong');
+          strong.innerHTML = JSON.stringify(e);
+          console.log('strong.innerHTML : '+strong.innerHTML);
+          document.body.appendChild(strong);
+        });
+      };
+/**************************************************选中的摄像头begin****************************************************/  
+      var get_and_show_media = function(id) {
+		var videoId = request("videoId");
+		var url = location.href; 
+		if(videoId == "" || videoId == undefined || videoId == null){
+			location.href=location.href+"&videoId="+id;
+		}else{
+			location.href=url.substring(0,location.href.indexOf("&videoId"))+"&videoId="+id;
+		}
+		console.log("location.href=="+location.href);
+		location.reload();//页面重载
+      };
+/***************************************************选中摄像头end**************************************************/    
+      var getMediaSource = function(media) {
+      	var a = 1/videoSources.length;
+      	var b=a.toFixed(4);
+      	var btnWidthStyle = b.slice(2,4)+"."+b.slice(4,6)+"%";
+        console.log(media);
+        media.forEach(function(media_source) {
+          if (!media_source) return;
+          if (media_source.kind === 'video') 
+          {
+            // add buttons for each media item
+			var btnDiv =  document.createElement("div");
+			btnDiv.setAttribute("id",media_source.id+"btnDiv");
+			btnDiv.setAttribute("style","position:relative;float:left;width:"+btnWidthStyle+";height:1%;background-color:black;opacity:0.58");//background-image:url(/shexiangtou/MouseOver-.png);
+			$("#videoList").append(btnDiv);
+			var icon_she_xiang_tou=document.createElement("img");
+			icon_she_xiang_tou.src="/shexiangtou/icon_she_xiang_tou.png";
+			icon_she_xiang_tou.setAttribute("style","position:relative;width:4%;opacity:0.58;");
+			
+			btnDiv.appendChild(icon_she_xiang_tou);
+			var btn = document.createElement("input");
+			btn.setAttribute("id",media_source.id);
+			btn.setAttribute("type","button");
+			btn.setAttribute("value","摄像头");
+			btn.setAttribute("style","position:absolute;width:95%;height:100%; font-size:120%;color:rgb(237,237,237);background-color:black;border:0;opacity:0.58;");
+			btnDiv.appendChild(btn);
+
+			var feng_ge_xian=document.createElement("img");
+			feng_ge_xian.src="/shexiangtou/feng_ge_xian.png";
+			feng_ge_xian.setAttribute("style","position:relative;width:1%;height:20px;");
+			btnDiv.appendChild(feng_ge_xian);
+            // show video on click
+            $(document).on("click", "#"+media_source.id, function(e){
+            if (window.stream) {
+    			mediaElement.src = null;
+    			window.stream.stop();
+    			console.log("videoElement: "+mediaElement);
+ 			 }
+			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
+			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseDown.png;)");
+			  //rtc.closeAllPeerConnections();//关闭所有流
+              get_and_show_media(media_source.id);
+            });
+			
+			$(document).on("mouserover", "#"+media_source.id+"btnDiv", function(e){
+			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
+			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseOver-.png);");
+            });
+          }
+          get_and_show_media1(media_source.id);
+        });
+      }
+	};
+
+/*******************************************************获取摄像头列表end**********************************************/
+	
+/***************************************************实时获取鼠标位置begin********************************************************/
+ var getCoordInDocument = function(e) {
+ e = e || window.event;
+ var x = e.pageX || (e.clientX +(document.documentElement.scrollLeft|| document.body.scrollLeft));
+ var y= e.pageY || (e.clientY +(document.documentElement.scrollTop|| document.body.scrollTop));
+ return {'x':x,'y':y};
+}
+ var computedStyle = document.defaultView.getComputedStyle(document.getElementById("videoList"), null);
+ body.onmousemove = function(e){
+	var pointer = getCoordInDocument(e);
+	if(pointer.y < 50){
+		if(computedStyle.display == "block"){
+			console.info("computedStyle.display: "+computedStyle.display);
+		}else{
+			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;z-index:999;background-color:transparent;");//display:block;
+			/*************************************************缓慢显示begin*******************************************/
+			//$("#videoList").show(1000,function(){
+			//	$(this).attr("style","position:absolute;width:100%;z-index:999;background-color:transparent;");
+			//});
+			/*************************************************缓慢显示end*****************************************/
+		}	
+	  }else{
+			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;display:none;z-index:999;");
+			//fadeOut(document.getElementById("videoList"), "slow");
+			//$("#videoList").hide(1000);
+	  }
+ }
+/***************************************************实时获取鼠标位置end*****************************************************/
+
+
+/*******************************************************按数字分屏begin************************************************************/
+ function divScreen(num){
 		//alert("现在开始 "+num+" 分屏");
 		videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
 		divArray=document.getElementsByTagName("li");
@@ -368,95 +643,10 @@
 			}
 		}
 		drag();//读取位置信息
-  }
+  } 
+/******************************************************按数字分屏end**********************************************************/
 
-  /****************************end***************************/
-  //成功创建WebSocket连接
-  rtc.on("connected", function(socket) {
-	var audio = request("audio");
-	var speaker = request("speaker");
-	var videoId = request("videoId");
-	audio=getParams(audio);
-	speaker=getParams(speaker);
-	console.info("音频状态是:"+audio+", speaker:"+speaker);
-	console.info("创建WebSocket的时候audio="+audio);
-	getCameraList();//获取摄像头列表
-	if (window.stream) {
-    	me.src = null;
-    	window.stream.stop();
-		console.log("videoElement: "+me);
- 	 }
-	 rtc.localMediaStream = null;
-	 
-    //创建本地视频流
-	if(videoId == "" || videoId == undefined || videoId == null){
-		rtc.createStream({//设置分辨率是320*180//684,513//640*480
-			video: {"mandatory":{"maxWidth":"1920","maxHeight":"1080"},"optional":[{"frameRate":60},{"aspectRatio":16/9}]},
-			audio: audio
-		});
-	}else{
-		rtc.createStream({//设置分辨率是320*180//684,513//640*480
-			video: {mandatory:{"maxWidth":"1920","maxHeight":"1080"},"optional": [{ "sourceId": videoId},{"aspectRatio":16/9}]},
-			audio: audio
-		});
-	}
-  });
-  
-  
-  //创建本地视频流成功
-  rtc.on("stream_created", function(stream) {
-    document.getElementById('me').src = URL.createObjectURL(stream);
-    document.getElementById('me').play();
-	/***********************LX************************/
-	divArray=document.getElementsByTagName("li");
-	console.info("创建本地视频的时候divArray.length是: "+divArray.length);
-	divArray[0].setAttribute("style","display:block;width:100%;height:100%;text-align:center;");
-	document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
-	/***********************end**********************/
-	//rtc.localMediaStream.stop();
-	//onload();
-	
-  });
-  
-  
-  	function onload(){
-		if(location.href.indexOf('#reloaded')==-1){
-			location.href=location.href+"#reloaded";
-			location.reload();
-		}
-	}
-
-  //创建本地视频流失败
-  rtc.on("stream_create_error", function() {
-    alert("create stream failed!");
-  });
-  //接收到其他用户的视频流
-  rtc.on('pc_add_stream', function(stream, socketId) {
-	var videoSelect=new Array();
-    var newVideo = document.createElement("video"),
-        id = "other-" + socketId;
-   // newVideo.setAttribute("class", "other");
-    newVideo.setAttribute("autoplay", "autoplay");
-    newVideo.setAttribute("id", id);
-	var videoDiv = document.createElement("li");
-	videoDiv.setAttribute("id",id+"videoDiv");
-	videoDiv.appendChild(newVideo);
-    ul1.appendChild(videoDiv);
-	
-    rtc.attachStream(stream, id);
-	newVideo.ondblclick=function(event){
-		newVideo.webkitRequestFullScreen();
-	};
-	videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-	console.info("现在一共有 "+videoNum+" 个视频");
-	
-	//divScreen(videoNum);
-	splitScreen();
-	//videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-  	//divArray=document.getElementsByTagName("li");
-	//divScreen(videoNum);
-  });
-  /***********************************分屏******************************************/
+  /************************************************自动分屏begin************************************************************/
  
   function clearStyle(divArray,videoNum){
 		for(var i=0; i<videoNum; i++){
@@ -595,195 +785,8 @@
 		drag();//读取位置信息
 		if(videoNum === 2){bound.jSVideoNum("'"+videoNum+"'",'');}
   }
-  /*************************************end*****************************************/
-  //删除其他用户
-  rtc.on('remove_peer', function(socketId) {
-    var video = document.getElementById('other-' + socketId);
-	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
-    if(video){
-	  var videoNum=document.getElementsByTagName("video").length;
-	  var divArray=document.getElementsByTagName("li");
-	  var divLength=divArray.length;
-		for(var z=0;z<=divLength;z++){
-			console.info("div的长度------: "+divArray.length);
-			var appendDiv=document.getElementById("appendDiv"+z);
-			if(appendDiv){
-				console.info("删除appendDiv"+z);
-				appendDiv.parentNode.removeChild(appendDiv);
-			}
-	    }
-		video.parentNode.removeChild(video);
-		videoDiv.parentNode.removeChild(videoDiv);
-		//divScreen(videoNum);
-		splitScreen();
-    }
-  });
-  
-  /*********************************************************挂断按钮设置*********************************************************/
-  
-  var hangupUser = document.getElementById("hangupUser");
-  hangupUser.onclick = function(){
-	hangUpMyself();
-  };
-  function hangUpMyself(){
-	rtc.closeAllPeerConnections();
-  }
-  
-  function getVideosNumber(){
-    var videoNumber = document.getElementsByTagName("video").length;
-	return videoNumber;
-  }
-  
-  
-  /*********************************************************挂断按钮设置end******************************************************/
-  
-  function getConnection(){
-	//连接WebSocket服务器
-	var roomNum = request("roomNum");//获取参数roomNum
-	rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);//window.location.hash.slice(1)
-  }
-  setTimeout("getConnection()",parseInt(1200*Math.random()));
+  /**********************************************自动分屏end**************************************************************/
 
-  //监听浏览器窗口的大小
-
-  var bigger = document.getElementById("bigger");
-  bigger.onclick=function(){
-		fullScreen();
-	};
-	/*******************************************************获取摄像头列表**************************************************/
-	var  getCameraList = function(){
-	  var mediaElement = document.getElementById('me');
-      if (!MediaStreamTrack) document.body.innerHTML = '<h1>Incompatible Browser Detected. Try <strong style="color:red;">Chrome Canary</strong> instead.</h1>';
-      var videoSources = [];
-      MediaStreamTrack.getSources(function(media_sources) {
-        media_sources.forEach(function(media_source){
-          if (media_source.kind === 'video') {
-            videoSources.push(media_source);
-          }
-        });
-        getMediaSource(videoSources);
-      });
-
-      var get_and_show_media1 = function(id) {	  //给摄像头赋名称
-        var constraints = {};
-        constraints.video = {
-          mandatory:{"maxWidth":"1920","maxHeight":"1080"},
-          optional: [{ sourceId: id},{aspectRatio:16/9}]
-        };
-        navigator.webkitGetUserMedia(constraints, function(stream) {
-          var track = stream.getVideoTracks()[0];
-  		  console.log( "camera's name: ", track.label );
-		  if(track.label == "Virtual Cam"){
-			$("#"+id).val("屏幕共享");
-			document.getElementById(id+"btnDiv").firstChild.src="/shexiangtou/icon_nei_wang.png";//获取摄像头的元素
-			console.log("document.getElementById().firstChild.src: "+document.getElementById().firstChild.src);
-		  }else{
-			$("#"+id).val(track.label);
-		}
-        }, function (e){
-          document.body.appendChild(document.createElement('hr'));
-          var strong = document.createElement('strong');
-          strong.innerHTML = JSON.stringify(e);
-          console.log('strong.innerHTML : '+strong.innerHTML);
-          document.body.appendChild(strong);
-        });
-      };
-/**************************************************选中的摄像头****************************************************/  
-      var get_and_show_media = function(id) {
-		var videoId = request("videoId");
-		var url = location.href; 
-		if(videoId == "" || videoId == undefined || videoId == null){
-			location.href=location.href+"&videoId="+id;
-		}else{
-			location.href=url.substring(0,location.href.indexOf("&videoId"))+"&videoId="+id;
-		}
-		console.log("location.href=="+location.href);
-		location.reload();//页面重载
-      };
-/***************************************************选中摄像头end**************************************************/    
-      var getMediaSource = function(media) {
-      	var a = 1/videoSources.length;
-      	var b=a.toFixed(4);
-      	var btnWidthStyle = b.slice(2,4)+"."+b.slice(4,6)+"%";
-        console.log(media);
-        media.forEach(function(media_source) {
-          if (!media_source) return;
-          if (media_source.kind === 'video') 
-          {
-            // add buttons for each media item
-			var btnDiv =  document.createElement("div");
-			btnDiv.setAttribute("id",media_source.id+"btnDiv");
-			btnDiv.setAttribute("style","position:relative;float:left;width:"+btnWidthStyle+";height:1%;background-color:black;opacity:0.58");//background-image:url(/shexiangtou/MouseOver-.png);
-			$("#videoList").append(btnDiv);
-			var icon_she_xiang_tou=document.createElement("img");
-			icon_she_xiang_tou.src="/shexiangtou/icon_she_xiang_tou.png";
-			icon_she_xiang_tou.setAttribute("style","position:relative;width:4%;opacity:0.58;");
-			
-			btnDiv.appendChild(icon_she_xiang_tou);
-			var btn = document.createElement("input");
-			btn.setAttribute("id",media_source.id);
-			btn.setAttribute("type","button");
-			btn.setAttribute("value","摄像头");
-			btn.setAttribute("style","position:absolute;width:95%;height:100%; font-size:120%;color:rgb(237,237,237);background-color:black;border:0;opacity:0.58;");
-			btnDiv.appendChild(btn);
-
-			var feng_ge_xian=document.createElement("img");
-			feng_ge_xian.src="/shexiangtou/feng_ge_xian.png";
-			feng_ge_xian.setAttribute("style","position:relative;width:1%;height:20px;");
-			btnDiv.appendChild(feng_ge_xian);
-            // show video on click
-            $(document).on("click", "#"+media_source.id, function(e){
-            if (window.stream) {
-    			mediaElement.src = null;
-    			window.stream.stop();
-    			console.log("videoElement: "+mediaElement);
- 			 }
-			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
-			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseDown.png;)");
-			  //rtc.closeAllPeerConnections();//关闭所有流
-              get_and_show_media(media_source.id);
-            });
-			
-			$(document).on("mouserover", "#"+media_source.id+"btnDiv", function(e){
-			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
-			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseOver-.png);");
-            });
-          }
-          get_and_show_media1(media_source.id);
-        });
-      }
-	};
-
-	/*******************************************************获取摄像头列表**end**********************************************/
-	
-/***************************************************实时获取鼠标位置********************************************************/
- var getCoordInDocument = function(e) {
- e = e || window.event;
- var x = e.pageX || (e.clientX +(document.documentElement.scrollLeft|| document.body.scrollLeft));
- var y= e.pageY || (e.clientY +(document.documentElement.scrollTop|| document.body.scrollTop));
- return {'x':x,'y':y};
-}
- var computedStyle = document.defaultView.getComputedStyle(document.getElementById("videoList"), null);
- body.onmousemove = function(e){
-	var pointer = getCoordInDocument(e);
-	if(pointer.y < 50){
-		if(computedStyle.display == "block"){
-			console.info("computedStyle.display: "+computedStyle.display);
-		}else{
-			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;z-index:999;background-color:transparent;");//display:block;
-			/*************************************************缓慢显示*************************************************************/
-			//$("#videoList").show(1000,function(){
-			//	$(this).attr("style","position:absolute;width:100%;z-index:999;background-color:transparent;");
-			//});
-			/*************************************************缓慢显示end**********************************************************/
-		}	
-	  }else{
-			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;display:none;z-index:999;");
-			//fadeOut(document.getElementById("videoList"), "slow");
-			//$("#videoList").hide(1000);
-	  }
- }
-/***************************************************实时获取鼠标位置end*****************************************************/
 
   
 </script>
