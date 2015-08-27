@@ -457,7 +457,7 @@
 	//divScreen(videoNum);
   });
   /***********************************分屏******************************************/
-
+ 
   function clearStyle(divArray,videoNum){
 		for(var i=0; i<videoNum; i++){
 			divArray[i].setAttribute("style","");
@@ -640,7 +640,7 @@
   function getConnection(){
 	//连接WebSocket服务器
 	var roomNum = request("roomNum");//获取参数roomNum
-	rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0], "roomNum="+roomNum);//window.location.hash.slice(1)
+	rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);//window.location.hash.slice(1)
   }
   setTimeout("getConnection()",parseInt(1200*Math.random()));
 
@@ -697,6 +697,7 @@
 		}else{
 			location.href=url.substring(0,location.href.indexOf("&videoId"))+"&videoId="+id;
 		}
+		console.log("location.href=="+location.href);
 		location.reload();//页面重载
       };
 /***************************************************选中摄像头end**************************************************/    
@@ -739,13 +740,12 @@
  			 }
 			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
 			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseDown.png;)");
-			  rtc.closeAllPeerConnections();//关闭所有流
+			  //rtc.closeAllPeerConnections();//关闭所有流
               get_and_show_media(media_source.id);
             });
 			
 			$(document).on("mouserover", "#"+media_source.id+"btnDiv", function(e){
 			  var btnDiv = document.getElementById(media_source.id+"btnDiv");
-			  alert("mousrover");
 			  btnDiv.setAttribute("style","background-image:url(/shexiangtou/MouseOver-.png);");
             });
           }
@@ -770,17 +770,17 @@
 		if(computedStyle.display == "block"){
 			console.info("computedStyle.display: "+computedStyle.display);
 		}else{
-			//document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;z-index:999;background-color:transparent;");//display:block;
+			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;z-index:999;background-color:transparent;");//display:block;
 			/*************************************************缓慢显示*************************************************************/
-			$("#videoList").show(1000,function(){
-				$(this).attr("style","position:absolute;width:100%;z-index:999;background-color:transparent;");
-			});
+			//$("#videoList").show(1000,function(){
+			//	$(this).attr("style","position:absolute;width:100%;z-index:999;background-color:transparent;");
+			//});
 			/*************************************************缓慢显示end**********************************************************/
 		}	
 	  }else{
-			//document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;display:none;z-index:999;");
+			document.getElementById("videoList").setAttribute("style","position:absolute;width:100%;display:none;z-index:999;");
 			//fadeOut(document.getElementById("videoList"), "slow");
-			$("#videoList").hide(1000);
+			//$("#videoList").hide(1000);
 	  }
  }
 /***************************************************实时获取鼠标位置end*****************************************************/

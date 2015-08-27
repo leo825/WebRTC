@@ -6,6 +6,7 @@ var path = require("path");
 
 var port = process.env.PORT || 3000;
 server.listen(port);
+ss
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -14,9 +15,8 @@ app.get('/mcu/removeRoom.do', function(req, res){  /* http://192.168.4.102:3000/
 	var roomNum = req.query.roomNum;
 	SkyRTC.rtc.emit('__remove_room',roomNum);
 	res.send("已经将房间 "+roomNum+" 移除了");
-	
 
-}); 
+});
 
 SkyRTC.rtc.on('remove_room',function(roomNum){
 	console.log("已经将房间 "+roomNum+" 移除了");

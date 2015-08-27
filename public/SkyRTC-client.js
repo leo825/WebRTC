@@ -7,7 +7,7 @@ var SkyRTC = function() {
     var moz = !!navigator.mozGetUserMedia;
     var iceServer = {
         "iceServers": [{
-            "url": "stun:stun.voipstunt.com"
+            "url": "stun:stun.l.google.com:19302"
         }]
     };
     var packetSize = 1000;
@@ -83,7 +83,8 @@ var SkyRTC = function() {
 
     //本地连接信道，信道为websocket
     skyrtc.prototype.connect = function(server, room) {
-        var socket,that = this;
+        var socket,
+            that = this;
         room = room || "";
         socket = this.socket = new WebSocket(server);
         socket.onopen = function() {
@@ -119,7 +120,7 @@ var SkyRTC = function() {
             that.dataChannels = {};
             that.fileChannels = {};
             that.connections = [];
-            that.fileData = {};	
+            that.fileData = {};
             that.emit('socket_closed', socket);
         };
 
@@ -147,6 +148,7 @@ var SkyRTC = function() {
         });
 
         this.on('_remove_peer', function(data) {
+			console.log("_remove_peer被调用,并且socketId是: "+data.socketId);
             var sendId;
             that.closePeerConnection(that.peerConnections[data.socketId]);
             delete that.peerConnections[data.socketId];
@@ -157,6 +159,12 @@ var SkyRTC = function() {
             delete that.fileChannels[data.socketId];
             that.emit("remove_peer", data.socketId);
         });
+		
+		//移除房间成员lx
+		this.on('_remove_room_peer',function(data){
+			console.log("_remove_room_peer被调用");
+			that.remove_streams();
+		});
 
         this.on('_offer', function(data) {
             that.receiveOffer(data.socketId, data.sdp);
@@ -192,14 +200,14 @@ var SkyRTC = function() {
     skyrtc.prototype.createStream = function(options) {
         var that = this;
 
-        //options.video = !!options.video;
-        //options.audio = !!options.audio;
+        options.video = !!options.video;
+        options.audio = !!options.audio;
 		
-		console.log("options.video: "+options.video+", options.audio: "+options.audio);
+		console.log("options.video: "+options.video+" options.audio: "+options.audio);
 
         if (getUserMedia) {
             this.numStreams++;
-            getUserMedia.call(navigator,{"video": options.video,"audio": options.audio}, function(stream) {//options//{"video": {"mandatory":{"maxWidth":"683","maxHeight":"642"},"optional":[]},"audio": true}
+            getUserMedia.call(navigator,{"video": {"mandatory":{"maxWidth":"640","maxHeight":"360"},"optional":[]},"audio": false}, function(stream) {//options//{"video": {"mandatory":{"maxWidth":"683","maxHeight":"642"},"optional":[]},"audio": true}
                     that.localMediaStream = stream;
                     that.initializedStreams++;
                     that.emit("stream_created", stream);
@@ -236,7 +244,21 @@ var SkyRTC = function() {
         }
         element.src = webkitURL.createObjectURL(stream);
     };
-
+	/******************************关闭本地流*********************************/
+	    skyrtc.prototype.remove_streams = function() {
+        var i, m,
+            stream,
+            connection;
+        for (connection in this.peerConnections) {
+            this.peerConnections[connection].removeStream(this.localMediaStream);
+//			this.emit("remove_peer", connection);
+        }
+		this.localMediaStream.stop();
+		this.localMediaStream = null;
+		this.closeAllPeerConnections();
+    };
+	
+	/******************************关闭本地流end*********************************/
 
     /***********************信令交换部分*******************************/
 
@@ -348,7 +370,24 @@ var SkyRTC = function() {
         if (!pc) return;
         pc.close();
     };
+	/****************closeAllPeerConnections**start******************/
+	//关闭PeerConnection连接
+    skyrtc.prototype.closeAllPeerConnections = function() {
 
+		var pc;
+		for (connection in this.peerConnections) {
+			pc = this.peerConnections[connection];
+			if(!pc) continue;
+			pc.close();
+			this.emit("remove_peer", connection);
+		}	
+		this.socket.close();
+		this.localMediaStream.stop();
+    };
+	
+	/****************closeAllPeerConnections**end******************/
+	
+	
 
     /***********************数据通道连接部分*****************************/
 
