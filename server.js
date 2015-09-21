@@ -6,7 +6,6 @@ var path = require("path");
 
 var port = process.env.PORT || 3000;
 server.listen(port);
-ss
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -30,8 +29,8 @@ SkyRTC.rtc.on('new_connect', function(socket) {
 	console.log('创建新连接');
 });
 
-SkyRTC.rtc.on('remove_peer', function(socketId) {
-	console.log(socketId + "用户离开");
+SkyRTC.rtc.on('remove_peer', function(socket) {
+	console.log("用户[" + socket.userId + "," + socket.userName + "]离开");
 });
 
 SkyRTC.rtc.on('new_peer', function(socket, room) {

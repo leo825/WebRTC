@@ -82,7 +82,7 @@ var SkyRTC = function() {
 
 
     //本地连接信道，信道为websocket
-    skyrtc.prototype.connect = function(server, room) {
+    skyrtc.prototype.connect = function(server, room, userId, userName) {
         var socket,
             that = this;
         room = room || "";
@@ -91,7 +91,9 @@ var SkyRTC = function() {
             socket.send(JSON.stringify({
                 "eventName": "__join",
                 "data": {
-                    "room": room
+                    "room": room,
+                    "userId":userId,
+                    "userName":userName
                 }
             }));
             that.emit("socket_opened", socket);
@@ -141,6 +143,7 @@ var SkyRTC = function() {
 
         this.on('_new_peer', function(data) {
             that.connections.push(data.socketId);
+            console.log("有新的用户呼入，用户为" + data.userId + ", 姓名为" + data.userName)
             var pc = that.createPeerConnection(data.socketId),
                 i, m;
             pc.addStream(that.localMediaStream);

@@ -155,8 +155,11 @@
   function getConnection(){
 	//连接WebSocket服务器
 	var roomNum = request("roomNum");//获取参数roomNum
-	rtc.connect("ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);//window.location.hash.slice(1)
-	console.log("连接 WebSocket服务器, "+"ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0],roomNum);
+	var userID = request("userId"); //用户id
+	var userName = request("userName"); //用户姓名
+	var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+	rtc.connect(wsUrl,roomNum, userID, userName);
+	console.log("连接 WebSocket服务器:"+wsUrl,roomNum);
   }
   setTimeout("getConnection()",parseInt(1200*Math.random()));
 
