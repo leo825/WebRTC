@@ -130,6 +130,16 @@ var SkyRTC = function() {
             //获取所有服务器上的
             that.connections = data.connections;
             that.me = data.you;
+
+            if (data.users.length > 0) {
+                console.log("目前会议室中成员有" + data.users.length + "个,分别为:")
+                var tuser;
+                for (i = 0; i < data.users.length; i++) {
+                    tuser = data.users[i];
+                    console.log("[" + JSON.stringify(tuser) + "]")
+                }
+            }
+
             that.emit("get_peers", that.connections);
             that.emit('connected', socket);
         });
