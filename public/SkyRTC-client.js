@@ -61,6 +61,10 @@ var SkyRTC = function() {
         this.me = null;
         //保存所有与本地相连的peer connection， 键为socket id，值为PeerConnection类型
         this.peerConnections = {};
+        //保存所有与本地相连的用户id，键为socket id， 值为用户id
+        this.peerUserIds = {};
+        //保存所有与本地相连的用户信息，键为用户 id， 值为用户姓名
+        this.peerUserNames = {};
         //保存所有与本地连接的socket的id
         this.connections = [];
         //初始时需要构建链接的数目
@@ -73,10 +77,30 @@ var SkyRTC = function() {
         this.fileChannels = {};
         //保存所有接受到的文件
         this.receiveFiles = {};
+
+        this.addUserInfo = function(socketId ,userId, userName){
+            this.peerUserIds[socketId]= userId;
+            this.peerUserNames[socketId]=userName;
+        };
+
+        this.delUserInfo = function(socketId){
+            delete this.peerUserIds[socketId];
+            delete this.peerUserNames[socketId];
+        }
     }
     //继承自事件处理器，提供绑定事件和触发事件的功能
     skyrtc.prototype = new EventEmitter();
 
+    //根据socket id返回用户id及用户姓名
+    skyrtc.prototype.getUserInfo = function(socketId){
+        if(socketId in this.peerUserIds){
+            var userId = this.peerUserIds[socketId];
+            var userName = this.peerUserNames[socketId];
+            return {"userId":userId, "userName":userName};
+        }else{
+            return null;
+        }
+    };
 
     /*************************服务器连接部分***************************/
 
@@ -119,6 +143,8 @@ var SkyRTC = function() {
                 that.closePeerConnection(pcs[i]);
             }
             that.peerConnections = [];
+            that.peerUserIds = {};
+            that.peerUserNames = {};
             that.dataChannels = {};
             that.fileChannels = {};
             that.connections = [];
@@ -132,12 +158,14 @@ var SkyRTC = function() {
             that.me = data.you;
 
             if (data.users.length > 0) {
-                console.log("目前会议室中成员有" + data.users.length + "个,分别为:")
-                var tuser;
+                var logMsg, tuser;
                 for (i = 0; i < data.users.length; i++) {
                     tuser = data.users[i];
-                    console.log("[" + JSON.stringify(tuser) + "]")
+                    that.addUserInfo(tuser.socketId, tuser.userId, tuser.userName);
+                    logMsg += "[" + JSON.stringify(tuser) + "]";
                 }
+
+                console.log("目前会议室中成员有" + data.users.length + "个,分别为:" + logMsg);
             }
 
             that.emit("get_peers", that.connections);
@@ -153,7 +181,8 @@ var SkyRTC = function() {
 
         this.on('_new_peer', function(data) {
             that.connections.push(data.socketId);
-            console.log("有新的用户呼入，用户为" + data.userId + ", 姓名为" + data.userName)
+            that.addUserInfo(data.socketId, data.userId, data.userName);
+            console.log("有新的用户呼入，用户为" + data.userId + ", 姓名为" + data.userName);
             var pc = that.createPeerConnection(data.socketId),
                 i, m;
             pc.addStream(that.localMediaStream);
@@ -167,6 +196,7 @@ var SkyRTC = function() {
             delete that.peerConnections[data.socketId];
             delete that.dataChannels[data.socketId];
             delete that.connections[data.socketId];
+            that.delUserInfo(data.socketId);
             for (sendId in that.fileChannels[data.socketId]) {
                 that.emit("send_file_error", new Error("Connection has been closed"), data.socketId, sendId, that.fileChannels[data.socketId][sendId].file);
             }

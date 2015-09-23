@@ -111,6 +111,11 @@
 	//divScreen(videoNum);
   });
 
+  rtc.on("new_peer", function(socketId){
+	  var userInfo = rtc.getUserInfo(socketId);
+	  console.log("有新成员到访,用户为" +  JSON.stringify(userInfo));
+  });
+
   //删除其他用户
   rtc.on('remove_peer', function(socketId) {
     var video = document.getElementById('other-' + socketId);
