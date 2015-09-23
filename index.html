@@ -14,10 +14,13 @@
 <body id="body">
 	<button id="bigger" style="display:none;">全屏</button>
 	<button id="hangupUser" style="display:none;">挂断</button>
+	<button id="hiddenVideo" style="display:none;">隐藏</button>
+	<button id="showVideo" style="display:none;">显示</button>
     <div id="videoList" style="position:absolute;width:100%;height:10%;display:none;z-index:999;border:1px solid black;"></div>
 	<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
 		<li id="videoDiv1"><video id="me" autoplay="true" muted="muted"></video></li>
 	</ul>
+	<div id="ul2" style="display:none;"></div>
 </body>
 <script type="text/javascript" src="/SkyRTC-client.js"></script>
 <script type="text/javascript" src="/jquery-1.10.2.js"></script>
@@ -25,6 +28,7 @@
 <script type="text/javascript">
 
   var ul1 = document.getElementById("ul1");
+  var ul2 = document.getElementById("ul2");
   var body=document.getElementById("body");
   var rtc = SkyRTC();
   var chackVideoNum=0;
@@ -65,7 +69,7 @@
     document.getElementById('me').src = URL.createObjectURL(stream);
     document.getElementById('me').play();
 	/***********************LX************************/
-	divArray=document.getElementsByTagName("li");
+	divArray=ul1.getElementsByTagName("li");
 	console.info("创建本地视频的时候divArray.length是: "+divArray.length);
 	divArray[0].setAttribute("style","display:block;width:100%;height:100%;text-align:center;");
 	document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
@@ -94,6 +98,7 @@
     newVideo.setAttribute("id", id);
 	var videoDiv = document.createElement("li");
 	videoDiv.setAttribute("id",id+"videoDiv");
+//	videoDiv.setAttribute("style","display:block;")
 	videoDiv.appendChild(newVideo);
     ul1.appendChild(videoDiv);
 	
@@ -107,17 +112,81 @@
 	//divScreen(videoNum);
 	splitScreen();
 	//videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-  	//divArray=document.getElementsByTagName("li");
+  	//divArray=ul1.getElementsByTagName("li");
 	//divScreen(videoNum);
   });
+  /***************************将用户信息放入到map中start*****************************/
+/*	var userId_socketId_map = new Map();
+	var socketId_videoSrc_map = new Map();
 
-  rtc.on("new_peer", function(socketId){
-	  var userInfo = rtc.getUserInfoBySocketId(socketId);
-	  console.log("1有新成员到访,用户为" +  JSON.stringify(userInfo));
 
-      var userInfo2 = rtc.getUserInfoByUserId(userInfo.userId);
-      console.log("2有新成员到访,用户为" +  JSON.stringify(userInfo2));
-  });
+  //获取连接用户的信息
+  rtc.on('get_room_peers',function(data){
+	var jsonArray = data;
+	for(var i = 0; i <  jsonArray.length; i++){
+		var socketId = jsonArray[i].socketId;
+		var userId = jsonArray[i].userId;
+		console.log("userId==="+userId+", socketId==="+socketId);
+		userId_socketId_map.put(userId,socketId);
+	}
+  });*/
+  var socketId_videoSrc_map = new Map();
+  function hiddenVideo(userId){
+	var socketObj = rtc.getUserInfoByUserId(userId);
+      var socketId = socketObj.socketId;
+	var video = document.getElementById('other-' + socketId);
+	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
+	socketId_videoSrc_map.put(socketId,video.src);
+    if(video){
+	  var videoNum=document.getElementsByTagName("video").length;
+	  var divArray=ul1.getElementsByTagName("li");
+	  var divLength=divArray.length;
+		for(var z=0;z<=divLength;z++){
+			console.info("div的长度------: "+divArray.length);
+			var appendDiv=document.getElementById("appendDiv"+z);
+			if(appendDiv){
+				console.info("删除appendDiv"+z);
+				appendDiv.parentNode.removeChild(appendDiv);
+			}
+	    }
+		video.parentNode.removeChild(video);
+		videoDiv.parentNode.removeChild(videoDiv);
+		//divScreen(videoNum);
+		splitScreen();
+    }
+  }
+  
+  function showVideo(userId){
+	if(userId != null){
+        var socketObj = rtc.getUserInfoByUserId(userId);
+        var socketId = socketObj.socketId;
+		var newVideo = document.createElement("video"),
+        id = "other-" + socketId;
+        newVideo.setAttribute("autoplay", "autoplay");
+		newVideo.setAttribute("id", id);
+		newVideo.src = socketId_videoSrc_map.get(socketId);
+		
+//      rtc.attachStream(stream, id);
+		var videoDiv = document.createElement("li");
+		videoDiv.setAttribute("id",id+"videoDiv");
+	//	videoDiv.setAttribute("style","display:block;")
+		videoDiv.appendChild(newVideo);
+		ul1.appendChild(videoDiv);
+		splitScreen();
+	}else{
+		alert("error, userId is null;");
+	}
+  }
+  var hiddenVideoBtn = document.getElementById("hiddenVideo");
+  hiddenVideoBtn.onclick = function(){
+	hiddenVideo("xibeidiaodu");
+  };
+  
+  var showVideoBtn = document.getElementById("showVideo");
+  showVideoBtn.onclick = function(){
+	showVideo("xibeidiaodu");
+  };
+  /***************************将用户信息放入到map中end*****************************/  
 
   //删除其他用户
   rtc.on('remove_peer', function(socketId) {
@@ -125,7 +194,7 @@
 	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
     if(video){
 	  var videoNum=document.getElementsByTagName("video").length;
-	  var divArray=document.getElementsByTagName("li");
+	  var divArray=ul1.getElementsByTagName("li");
 	  var divLength=divArray.length;
 		for(var z=0;z<=divLength;z++){
 			console.info("div的长度------: "+divArray.length);
@@ -203,7 +272,7 @@
 		  if(track.label == "Virtual Cam"){
 			$("#"+id).val("屏幕共享");
 			document.getElementById(id+"btnDiv").firstChild.src="/shexiangtou/icon_nei_wang.png";//获取摄像头的元素
-			console.log("document.getElementById().firstChild.src: "+document.getElementById().firstChild.src);
+			//console.log("document.getElementById().firstChild.src: "+document.getElementById().firstChild.src);
 		  }else{
 			$("#"+id).val(track.label);
 		  }
@@ -321,7 +390,7 @@
  function divScreen(num){
 		//alert("现在开始 "+num+" 分屏");
 		videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-		divArray=document.getElementsByTagName("li");
+		divArray=ul1.getElementsByTagName("li");
 		var divLength=divArray.length;
 		
 		for(var z=0;z<=divLength;z++){
@@ -663,8 +732,8 @@
   
   function splitScreen(){
 
-  	var videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-  	var divArray=document.getElementsByTagName("li");
+  	var videoNum=ul1.getElementsByTagName("video").length;//此处查看一共有几个视频源
+  	var divArray=ul1.getElementsByTagName("li");
 	var divArrayLength = divArray.length;
 	for(var i=0;i<=divArrayLength;i++){
 		var appendDiv=document.getElementById("appendDiv"+i);
@@ -682,14 +751,14 @@
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:100%;width:50%;display:none;");
 		//divArray[2].setAttribute("style","position:absolute;left:"+0.5*bodyWidth+"px;top:0;height:"+bodyHeight+"px;width:"+0.5*bodyWidth+"px;");
-		divArray[1].setAttribute("style","text-align:center;width:100%;height:100%;");
+		divArray[1].setAttribute("style","text-align:center;width:100%;height:100%;display:block;");
 		
 		/*var shipin1=document.getElementById("shipin1");
 		shipin1.onclick=function(event){
 			divArray[1].childNodes.item(0).webkitRequestFullScreen();
 		}
 		var shipin2=document.getElementById("shipin2")
-		shipin2.onclick=function(event){
+		shipin2.onclick=function(event ){
 			divArray[2].childNodes.item(0).webkitRequestFullScreen();
 		}*/
 	}
@@ -789,7 +858,9 @@
 		divArray[15].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
 	}
 		drag();//读取位置信息
-		if(videoNum === 2){bound.jSVideoNum("'"+videoNum+"'",'');}
+		if(videoNum === 2){
+			bound.jSVideoNum("'"+videoNum+"'",'');
+		}
   }
   /**********************************************自动分屏end**************************************************************/
 
