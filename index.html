@@ -112,8 +112,11 @@
   });
 
   rtc.on("new_peer", function(socketId){
-	  var userInfo = rtc.getUserInfo(socketId);
-	  console.log("有新成员到访,用户为" +  JSON.stringify(userInfo));
+	  var userInfo = rtc.getUserInfoBySocketId(socketId);
+	  console.log("1有新成员到访,用户为" +  JSON.stringify(userInfo));
+
+      var userInfo2 = rtc.getUserInfoByUserId(userInfo.userId);
+      console.log("2有新成员到访,用户为" +  JSON.stringify(userInfo2));
   });
 
   //删除其他用户

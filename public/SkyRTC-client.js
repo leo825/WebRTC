@@ -80,23 +80,44 @@ var SkyRTC = function() {
 
         this.addUserInfo = function(socketId ,userId, userName){
             this.peerUserIds[socketId]= userId;
-            this.peerUserNames[socketId]=userName;
+            this.peerUserNames[userId]=userName;
         };
 
         this.delUserInfo = function(socketId){
-            delete this.peerUserIds[socketId];
-            delete this.peerUserNames[socketId];
+            if(socketId in this.peerUserIds){
+                var userId = this.peerUserIds[socketId];
+                delete this.peerUserIds[socketId];
+                delete this.peerUserNames[userId];
+            }
+
         }
     }
     //继承自事件处理器，提供绑定事件和触发事件的功能
     skyrtc.prototype = new EventEmitter();
 
     //根据socket id返回用户id及用户姓名
-    skyrtc.prototype.getUserInfo = function(socketId){
+    skyrtc.prototype.getUserInfoBySocketId = function(socketId){
         if(socketId in this.peerUserIds){
             var userId = this.peerUserIds[socketId];
-            var userName = this.peerUserNames[socketId];
+            var userName = this.peerUserNames[userId];
             return {"userId":userId, "userName":userName};
+        }else{
+            return null;
+        }
+    };
+
+    //根据user id返回socket id及用户姓名
+    skyrtc.prototype.getUserInfoByUserId = function(userId){
+        if(userId in this.peerUserNames){
+            var userName = this.peerUserNames[userId];
+
+            var socketId;
+            for(var key in this.peerUserIds){
+                if(this.peerUserIds[key] == userId){
+                    socketId = key;
+                }
+            }
+            return {"socketId":socketId, "userName":userName};
         }else{
             return null;
         }
