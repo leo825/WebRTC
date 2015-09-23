@@ -166,6 +166,7 @@ var SkyRTC = function() {
             that.closePeerConnection(that.peerConnections[data.socketId]);
             delete that.peerConnections[data.socketId];
             delete that.dataChannels[data.socketId];
+            delete that.connections[data.socketId];
             for (sendId in that.fileChannels[data.socketId]) {
                 that.emit("send_file_error", new Error("Connection has been closed"), data.socketId, sendId, that.fileChannels[data.socketId][sendId].file);
             }
