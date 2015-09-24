@@ -14,8 +14,8 @@
 <body id="body">
 	<button id="bigger" style="display:none;">全屏</button>
 	<button id="hangupUser" style="display:none;">挂断</button>
-	<button id="hiddenVideo" style="display:none;">隐藏</button>
-	<button id="showVideo" style="display:none;">显示</button>
+	<button id="hideVideo" style="display:none;">隐藏</button>
+	<button id="showVideo" style="display:block;">显示</button>
     <div id="videoList" style="position:absolute;width:100%;height:10%;display:none;z-index:999;border:1px solid black;"></div>
 	<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
 		<li id="mevideoDiv"><video id="me" autoplay="true" muted="muted"></video></li>
@@ -38,6 +38,7 @@
   var roomNum = request("roomNum");//获取参数roomNum
   var userID = request("userId"); //用户id
   var userName = request("userName"); //用户姓名
+  var defaultShowVideo = request("defaultShowVideo");
   console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
   mevideoDiv.setAttribute("style","position:absolute;height:100%;width:100%;");
   //成功创建WebSocket连接
@@ -91,7 +92,6 @@
   });
   //接收到其他用户的视频流
   rtc.on('pc_add_stream', function(stream, socketId) {
-	var videoSelect=new Array();
     var newVideo = document.createElement("video"),
         id = "other-" + socketId;
    // newVideo.setAttribute("class", "other");
@@ -109,11 +109,18 @@
 	};
 	videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
 	console.info("现在一共有 "+videoNum+" 个视频");
-	splitScreen();
+      console.log("defaultShowVideo==="+defaultShowVideo);
+      if(defaultShowVideo == "show"){
+      }else{
+        var socketObj = rtc.getUserInfoBySocketId(socketId);
+        hideVideo(socketObj.userId);
+        console.log("hideVideo(socketObj.userId)==="+socketObj.userId);
+      }
+	  splitScreen();
   });
   /***************************将用户信息放入到map中start*****************************/
   var socketId_videoSrc_map = new Map();
-  function hiddenVideo(userId){
+  function hideVideo(userId){
       if(userId == userID){
           var video = document.getElementById("me");
           var videoDiv = document.getElementById("mevideoDiv");
@@ -169,9 +176,9 @@
 		alert("error, userId is null;");
 	}
   }
-  var hiddenVideoBtn = document.getElementById("hiddenVideo");
+  var hiddenVideoBtn = document.getElementById("hideVideo");
   hiddenVideoBtn.onclick = function(){
-	hiddenVideo("xibeidiaodu");
+	hideVideo("xibeidiaodu");
   };
   
   var showVideoBtn = document.getElementById("showVideo");
@@ -720,7 +727,6 @@
 	}
   
   function splitScreen(){
-
   	var videoNum=ul1.getElementsByTagName("video").length;//此处查看一共有几个视频源
   	var divArray=ul1.getElementsByTagName("li");
 	var divArrayLength = divArray.length;
@@ -731,12 +737,12 @@
 		}
 	}
 	console.info("开始分屏,此时divArray.length: "+divArrayLength+", videoNum:"+videoNum);
-	if(videoNum===1){
+	if(divArrayLength===1){
 		divArray[0].setAttribute("style","");
 		divArray[0].setAttribute("style","width:100%;height:100%;text-align:center;");
 		document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
 	}
-	if(videoNum===2){
+	if(divArrayLength===2){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:100%;width:50%;display:none;");
 		//divArray[2].setAttribute("style","position:absolute;left:"+0.5*bodyWidth+"px;top:0;height:"+bodyHeight+"px;width:"+0.5*bodyWidth+"px;");
@@ -751,20 +757,20 @@
 			divArray[2].childNodes.item(0).webkitRequestFullScreen();
 		}*/
 	}
-	if(videoNum===3){
+	if(divArrayLength===3){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:25%;top:0;height:50%;width:50%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
         divArray[2].setAttribute("style","position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");	
 	}
-	if(videoNum===4){
+	if(divArrayLength===4){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
 		divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
         divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");
 	}
-	if(videoNum===5){
+	if(divArrayLength===5){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
@@ -772,7 +778,7 @@
 		divArray[3].setAttribute("style","position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
 		divArray[4].setAttribute("style","position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
 	}
-	if(videoNum===6){
+	if(divArrayLength===6){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
@@ -781,7 +787,7 @@
 		divArray[4].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
 		divArray[5].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
 	}
-	if(videoNum===7){
+	if(divArrayLength===7){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
@@ -791,7 +797,7 @@
 		divArray[5].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
 		divArray[6].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
 	}
-	if(videoNum===8){
+	if(divArrayLength===8){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
@@ -802,7 +808,7 @@
 		divArray[6].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
 		divArray[7].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
 	}
-	if(videoNum===9){
+	if(divArrayLength===9){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
@@ -814,7 +820,7 @@
 		divArray[7].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
 		divArray[8].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
 	}
-	if(videoNum===10){
+	if(divArrayLength===10){
 			clearStyle(divArray,videoNum);
 			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
 			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
@@ -827,7 +833,7 @@
 			divArray[8].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
 			divArray[9].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
 	}
-	if(videoNum===16){
+	if(divArrayLength===16){
 		clearStyle(divArray,videoNum);
 		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:25%;width:25%;overflow:hidden;");
 		divArray[1].setAttribute("style","position:absolute;left:25%;top:0;height:25%;width:25%;overflow:hidden;");
@@ -846,10 +852,18 @@
 		divArray[14].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
 		divArray[15].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
 	}
-		drag();//读取位置信息
-		if(videoNum === 2){
-			bound.jSVideoNum("'"+videoNum+"'",'');
-		}
+      drag();//读取位置信息
+
+      var peers =rtc.peerUserIds;
+      var peersCount = 0;
+      console.log(peers);
+      for(var key in peers){
+          peersCount++;
+      }
+      if(peersCount === 2){
+          alert("调用  bound.jSVideoNum");
+          bound.jSVideoNum("'"+videoNum+"'",'');
+      }
   }
   /**********************************************自动分屏end**************************************************************/
 
