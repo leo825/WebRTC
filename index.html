@@ -18,7 +18,7 @@
 	<button id="showVideo" style="display:none;">显示</button>
     <div id="videoList" style="position:absolute;width:100%;height:10%;display:none;z-index:999;border:1px solid black;"></div>
 	<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
-		<li id="videoDiv1"><video id="me" autoplay="true" muted="muted"></video></li>
+		<li id="mevideoDiv"><video id="me" autoplay="true" muted="muted"></video></li>
 	</ul>
 	<div id="ul2" style="display:none;"></div>
 </body>
@@ -31,14 +31,15 @@
   var ul2 = document.getElementById("ul2");
   var body=document.getElementById("body");
   var rtc = SkyRTC();
-  var chackVideoNum=0;
-  var videoNum;
-  var videoDiv1=document.getElementById("videoDiv1");
-  var divArray;
+  var videoNum;//查看视频的个数
+  var divArray;//存储li数组
   var bodyHeight= window.innerHeight;//window.screen.height;//
   var bodyWidth= window.innerWidth;//window.screen.width;//
+  var roomNum = request("roomNum");//获取参数roomNum
+  var userID = request("userId"); //用户id
+  var userName = request("userName"); //用户姓名
   console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
-  videoDiv1.setAttribute("style","position:absolute;height:100%;width:100%;");
+  mevideoDiv.setAttribute("style","position:absolute;height:100%;width:100%;");
   //成功创建WebSocket连接
   rtc.on("connected", function(socket) {
 	var audio = request("audio");
@@ -108,35 +109,22 @@
 	};
 	videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
 	console.info("现在一共有 "+videoNum+" 个视频");
-
-	//divScreen(videoNum);
 	splitScreen();
-	//videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-  	//divArray=ul1.getElementsByTagName("li");
-	//divScreen(videoNum);
   });
   /***************************将用户信息放入到map中start*****************************/
-/*	var userId_socketId_map = new Map();
-	var socketId_videoSrc_map = new Map();
-
-
-  //获取连接用户的信息
-  rtc.on('get_room_peers',function(data){
-	var jsonArray = data;
-	for(var i = 0; i <  jsonArray.length; i++){
-		var socketId = jsonArray[i].socketId;
-		var userId = jsonArray[i].userId;
-		console.log("userId==="+userId+", socketId==="+socketId);
-		userId_socketId_map.put(userId,socketId);
-	}
-  });*/
   var socketId_videoSrc_map = new Map();
   function hiddenVideo(userId){
-	var socketObj = rtc.getUserInfoByUserId(userId);
-      var socketId = socketObj.socketId;
-	var video = document.getElementById('other-' + socketId);
-	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
-	socketId_videoSrc_map.put(socketId,video.src);
+      if(userId == userID){
+          var video = document.getElementById("me");
+          var videoDiv = document.getElementById("mevideoDiv");
+
+      }else{
+          var socketObj = rtc.getUserInfoByUserId(userId);
+          var socketId = socketObj.socketId;
+          var video = document.getElementById('other-' + socketId);
+          var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
+      }
+	socketId_videoSrc_map.put(userId,video.src);
     if(video){
 	  var videoNum=document.getElementsByTagName("video").length;
 	  var divArray=ul1.getElementsByTagName("li");
@@ -158,13 +146,17 @@
   
   function showVideo(userId){
 	if(userId != null){
-        var socketObj = rtc.getUserInfoByUserId(userId);
-        var socketId = socketObj.socketId;
-		var newVideo = document.createElement("video"),
-        id = "other-" + socketId;
+        if(userId == userID){
+            var id = "me";
+        }else{
+            var socketObj = rtc.getUserInfoByUserId(userId);
+            var socketId = socketObj.socketId;
+            var id = "other-" + socketId;
+        }
+        var newVideo = document.createElement("video");
         newVideo.setAttribute("autoplay", "autoplay");
 		newVideo.setAttribute("id", id);
-		newVideo.src = socketId_videoSrc_map.get(socketId);
+		newVideo.src = socketId_videoSrc_map.get(userId);
 		
 //      rtc.attachStream(stream, id);
 		var videoDiv = document.createElement("li");
@@ -184,7 +176,7 @@
   
   var showVideoBtn = document.getElementById("showVideo");
   showVideoBtn.onclick = function(){
-	showVideo("xibeidiaodu");
+      showVideo("xibeidiaodu");
   };
   /***************************将用户信息放入到map中end*****************************/  
 
@@ -231,9 +223,6 @@
   
   function getConnection(){
 	//连接WebSocket服务器
-	var roomNum = request("roomNum");//获取参数roomNum
-	var userID = request("userId"); //用户id
-	var userName = request("userName"); //用户姓名
 	var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
 	rtc.connect(wsUrl,roomNum, userID, userName);
 	console.log("连接 WebSocket服务器:"+wsUrl,roomNum);
