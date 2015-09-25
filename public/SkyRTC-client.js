@@ -125,6 +125,16 @@ var SkyRTC = function() {
 
     /*************************服务器连接部分***************************/
 
+    //断开与服务器的websocket连接
+    skyrtc.prototype.unConnect = function(){
+        try{
+            console.log("开始关闭socket连接...")
+            this.socket.close();
+            console.log("完成关闭socket连接.")
+        }catch(error){
+            console.log("在关闭本地socket连接时出现异常" + error);
+        }
+    }
 
     //本地连接信道，信道为websocket
     skyrtc.prototype.connect = function(server, room, userId, userName) {
@@ -158,7 +168,7 @@ var SkyRTC = function() {
         };
 
         socket.onclose = function(data) {
-            that.localMediaStream.close();
+            that.localMediaStream.stop();
             var pcs = that.peerConnections;
             for (i = pcs.length; i--;) {
                 that.closePeerConnection(pcs[i]);
@@ -224,12 +234,6 @@ var SkyRTC = function() {
             delete that.fileChannels[data.socketId];
             that.emit("remove_peer", data.socketId);
         });
-		
-		//移除房间成员lx
-		this.on('_remove_room_peer',function(data){
-			console.log("_remove_room_peer被调用");
-			that.remove_streams();
-		});
 
         this.on('_offer', function(data) {
             that.receiveOffer(data.socketId, data.sdp);
@@ -307,21 +311,7 @@ var SkyRTC = function() {
         }
         element.src = webkitURL.createObjectURL(stream);
     };
-	/******************************关闭本地流*********************************/
-	    skyrtc.prototype.remove_streams = function() {
-        var i, m,
-            stream,
-            connection;
-        for (connection in this.peerConnections) {
-            this.peerConnections[connection].removeStream(this.localMediaStream);
-//			this.emit("remove_peer", connection);
-        }
-		this.localMediaStream.stop();
-		this.localMediaStream = null;
-		this.closeAllPeerConnections();
-    };
-	
-	/******************************关闭本地流end*********************************/
+
 
     /***********************信令交换部分*******************************/
 
@@ -433,24 +423,7 @@ var SkyRTC = function() {
         if (!pc) return;
         pc.close();
     };
-	/****************closeAllPeerConnections**start******************/
-	//关闭PeerConnection连接
-    skyrtc.prototype.closeAllPeerConnections = function() {
 
-		var pc;
-		for (connection in this.peerConnections) {
-			pc = this.peerConnections[connection];
-			if(!pc) continue;
-			pc.close();
-			this.emit("remove_peer", connection);
-		}	
-		this.socket.close();
-		this.localMediaStream.stop();
-    };
-	
-	/****************closeAllPeerConnections**end******************/
-	
-	
 
     /***********************数据通道连接部分*****************************/
 
