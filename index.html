@@ -41,7 +41,7 @@
   var roomNum = request("roomNum");//获取参数roomNum
   var userID = request("userId"); //用户id
   var userName = request("userName"); //用户姓名
-  var defaultShowVideo = request("defaultShowVideo");
+  var defaultShowVideo = request("defaultShowVideo") || "show";
   console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
   var mevideoDiv = document.getElementById("mevideoDiv");
   var mewenziDiv = document.getElementById("mewenziDiv");
@@ -69,7 +69,6 @@
 		});
 	}
   });
-  
   
   //创建本地视频流成功
   rtc.on("stream_created", function(stream) {
@@ -246,6 +245,11 @@
   function join(roomid){
 	if(roomid==null || roomid.length==0){
 		console.log("roomid为空，加入会议失败");
+		return;
+	}
+
+	if(rtc.getUserInfoByUserId(userID)){
+		console.log("会议已经开始，不需要再次join");
 		return;
 	}
 
