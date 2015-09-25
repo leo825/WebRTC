@@ -18,7 +18,10 @@
 	<button id="showVideo" style="display:block;">显示</button>
     <div id="videoList" style="position:absolute;width:100%;height:10%;display:none;z-index:999;border:1px solid black;"></div>
 	<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
-		<li id="mevideoDiv"><video id="me" autoplay="true" muted="muted"></video></li>
+		<li id="mevideoDiv">
+            <video id="me" autoplay="true" muted="muted"></video>
+            <div id="mewenziDiv"></div>
+        </li>
 	</ul>
 	<div id="ul2" style="display:none;"></div>
 </body>
@@ -40,6 +43,8 @@
   var userName = request("userName"); //用户姓名
   var defaultShowVideo = request("defaultShowVideo");
   console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
+  var mevideoDiv = document.getElementById("mevideoDiv");
+  var mewenziDiv = document.getElementById("mewenziDiv");
   mevideoDiv.setAttribute("style","position:absolute;height:100%;width:100%;");
   //成功创建WebSocket连接
   rtc.on("connected", function(socket) {
@@ -75,6 +80,15 @@
 	console.info("创建本地视频的时候divArray.length是: "+divArray.length);
 	divArray[0].setAttribute("style","display:block;width:100%;height:100%;text-align:center;");
 	document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
+      /***************给视频添加文字*start**************/
+      var wenzi = document.createElement("h1");
+      wenzi.innerHTML = userName;
+      mewenziDiv.appendChild(wenzi);
+      mewenziDiv.setAttribute("id","mewenziDiv");
+      mewenziDiv.setAttribute("style","position:absolute;top:75%;left:45%;z-index:100;");
+      mevideoDiv.appendChild(mewenziDiv);
+
+      /***************给视频添加文字*end****************/
 	/***********************end**********************/	
   });
   
@@ -97,13 +111,25 @@
    // newVideo.setAttribute("class", "other");
     newVideo.setAttribute("autoplay", "autoplay");
     newVideo.setAttribute("id", id);
+      newVideo.setAttribute("style","width:100%;height:auto;muted:muted;");//给video视频设置大小样式
 	var videoDiv = document.createElement("li");
 	videoDiv.setAttribute("id",id+"videoDiv");
 //	videoDiv.setAttribute("style","display:block;")
 	videoDiv.appendChild(newVideo);
     ul1.appendChild(videoDiv);
-	
-    rtc.attachStream(stream, id);
+      rtc.attachStream(stream, id);
+      /***************给视频添加文字*start**************/
+      var wenziDiv = document.createElement("div"),
+              wenzi = document.createElement("h1");
+      var socketObj = rtc.getUserInfoBySocketId(socketId);
+      wenzi.innerHTML = socketObj.userName;
+      wenziDiv.setAttribute("id",id+"wenziDiv");
+      wenziDiv.setAttribute("style","position:absolute;top:75%;left:45%;z-index:100;");
+      wenziDiv.appendChild(wenzi);
+      videoDiv.appendChild(wenziDiv);
+      /***************给视频添加文字*end****************/
+
+
 	newVideo.ondblclick=function(event){
 		newVideo.webkitRequestFullScreen();
 	};
@@ -163,6 +189,7 @@
         var newVideo = document.createElement("video");
         newVideo.setAttribute("autoplay", "autoplay");
 		newVideo.setAttribute("id", id);
+        newVideo.setAttribute("style","width:100%;height:auto;muted:muted;");//给video视频设置大小样式
 		newVideo.src = socketId_videoSrc_map.get(userId);
 		
 //      rtc.attachStream(stream, id);
@@ -722,7 +749,7 @@
   function clearStyle(divArray,videoNum){
 		for(var i=0; i<videoNum; i++){
 			divArray[i].setAttribute("style","");
-			divArray[i].childNodes.item(0).setAttribute("style","width:100%;height:auto;muted:muted;");
+			//divArray[i].childNodes.item(0).setAttribute("style","width:100%;height:auto;muted:muted;");
 		}
 	}
   
