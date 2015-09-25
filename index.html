@@ -46,6 +46,7 @@
   var mevideoDiv = document.getElementById("mevideoDiv");
   var mewenziDiv = document.getElementById("mewenziDiv");
   mevideoDiv.setAttribute("style","position:absolute;height:100%;width:100%;");
+
   //成功创建WebSocket连接
   rtc.on("connected", function(socket) {
 	var audio = request("audio");
@@ -55,7 +56,6 @@
 	speaker=getParams(speaker);
 	console.info("音频状态是:"+audio+", speaker:"+speaker);
 	console.info("创建WebSocket的时候audio="+audio);
-	getCameraList();//获取摄像头列表
     //创建本地视频流
 	if(videoId == "" || videoId == undefined || videoId == null){
 		rtc.createStream({//设置分辨率是320*180//684,513//640*480
@@ -243,22 +243,33 @@
 	return videoNumber;
   }
 /*********************************************************挂断按钮设置end******************************************************/
-  function join(){
+  function join(roomid){
+	if(roomid==null || roomid.length==0){
+		console.log("roomid为空，加入会议失败");
+		return;
+	}
+
+	roomNum = roomid;
 	getConnection();
   }
   
   function unjoin(){
+	  roomNum = null;
 	  rtc.unConnect();
 	  location.reload();
   }
   
   function getConnection(){
-	//连接WebSocket服务器
-	var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
-	rtc.connect(wsUrl,roomNum, userID, userName);
-	console.log("连接 WebSocket服务器:"+wsUrl,roomNum);
+	  if(roomNum!=null && roomNum.length>0){
+		  //连接WebSocket服务器
+		  var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+		  rtc.connect(wsUrl,roomNum, userID, userName);
+		  console.log("连接 WebSocket服务器:"+wsUrl,roomNum);
+	  }else{
+		  console.log("因参数中会议号为空，暂时不初始化websocket连接");
+	  }
   }
-  //setTimeout("getConnection()",parseInt(1200*Math.random()));
+  setTimeout("getConnection()",parseInt(1200*Math.random()));
 
   //监听浏览器窗口的大小
 
@@ -884,7 +895,7 @@
           peersCount++;
       }
       if(peersCount === 2){
-          alert("调用  bound.jSVideoNum");
+          //alert("调用  bound.jSVideoNum");
 		  try {
 			  bound.jSVideoNum("'" + videoNum + "'", '');
 		  }catch(error){
@@ -894,7 +905,7 @@
   }
   /**********************************************自动分屏end**************************************************************/
 
-
-  
+	//在页面加载完成后，调取摄像头列表
+    getCameraList();
 </script>
 </html>
