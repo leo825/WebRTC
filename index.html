@@ -82,9 +82,10 @@
       /***************给视频添加文字*start**************/
       var wenzi = document.createElement("h1");
       wenzi.innerHTML = userName;
+	  wenzi.setAttribute("style","color:white;font-family:黑体;")
       mewenziDiv.appendChild(wenzi);
       mewenziDiv.setAttribute("id","mewenziDiv");
-      mewenziDiv.setAttribute("style","position:absolute;top:75%;left:45%;z-index:100;");
+      mewenziDiv.setAttribute("style","position:absolute;top:7%;right:5%;z-index:100;");
       mevideoDiv.appendChild(mewenziDiv);
 
       /***************给视频添加文字*end****************/
@@ -122,8 +123,9 @@
               wenzi = document.createElement("h1");
       var socketObj = rtc.getUserInfoBySocketId(socketId);
       wenzi.innerHTML = socketObj.userName;
+	  wenzi.setAttribute("style","color:white;font-family:黑体;")
       wenziDiv.setAttribute("id",id+"wenziDiv");
-      wenziDiv.setAttribute("style","position:absolute;top:75%;left:45%;z-index:100;");
+      wenziDiv.setAttribute("style","position:absolute;top:7%;right:5%;z-index:100;");
       wenziDiv.appendChild(wenzi);
       videoDiv.appendChild(wenziDiv);
       /***************给视频添加文字*end****************/
