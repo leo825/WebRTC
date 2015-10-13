@@ -123,6 +123,11 @@ var SkyRTC = function() {
         }
     };
 
+    //判断当前是否仍处于会议模式
+    skyrtc.prototype.isLive = function(){
+        return Object.keys(this.peerUserIds).length >0;
+    }
+
     /*************************服务器连接部分***************************/
 
     //断开与服务器的websocket连接
