@@ -1,778 +1,806 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>WebrtcConference Demo</title>
-  <style type="text/css">
-  	html,body{ width:100%;height:100%;overflow:hidden;margin:0;}
-	ul{position:relative;width:100%;height:100%;margin:0;padding:0;}
-	.one {position:absolute;left:25%;top:0;height:50%;width:50%;overflow:hidden;}
-	.two {position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;}
-	.three {position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;}
-  </style>
+    <meta charset="UTF-8">
+    <title>MCU Conference</title>
+    <style type="text/css">
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        ul {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .one {
+            position: absolute;
+            left: 25%;
+            top: 0;
+            height: 50%;
+            width: 50%;
+            overflow: hidden;
+        }
+
+        .two {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 50%;
+            height: 50%;
+            overflow: hidden;
+        }
+
+        .three {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 50%;
+            height: 50%;
+            overflow: hidden;
+        }
+    </style>
 </head>
-<body id="body">
-	<button id="bigger" style="display:none;">全屏</button>
-	<button id="hangupUser" style="display:none;">挂断</button>
-	<button id="hideVideo" style="display:none;">隐藏</button>
-	<button id="showVideo" style="display:none;">显示</button>
-	<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
-		<li id="mevideoDiv">
-            <video id="me" autoplay="true" muted="muted"></video>
-            <div id="mewenziDiv"></div>
-        </li>
-	</ul>
-	<div id="ul2" style="display:none;"></div>
+<body id="body" onload="init();">
+<ul id="ul1" style="position:relative;width:100%;height:100%;margin:0;padding:0;z-index:0;">
+    <li id="mevideoDiv">
+        <video id="me" autoplay="true" muted="muted"></video>
+        <div id="mewenziDiv"></div>
+    </li>
+</ul>
+<div id="ul2" style="display:none;"></div>
 </body>
 <script type="text/javascript" src="/SkyRTC-client.js"></script>
 <script type="text/javascript" src="/jquery-1.10.2.js"></script>
+<script type="text/javascript" src="/camerainfos.js"></script>
 <script type="text/javascript" src="/move.js"></script>
 <script type="text/javascript">
+    var ul1 = document.getElementById("ul1");
+    var ul2 = document.getElementById("ul2");
+    var  rtc = SkyRTC();
 
-  var ul1 = document.getElementById("ul1");
-  var ul2 = document.getElementById("ul2");
-  var body=document.getElementById("body");
-  var rtc = SkyRTC();
-  var videoNum;//查看视频的个数
-  var divArray;//存储li数组
-  var bodyHeight= window.innerHeight;//window.screen.height;//
-  var bodyWidth= window.innerWidth;//window.screen.width;//
-  var roomNum = request("roomNum");//获取参数roomNum
-  var userID = request("userId"); //用户id
-  var userName = request("userName"); //用户姓名
-  var defaultShowVideo = request("defaultShowVideo") || "show";
-  console.info("获得屏幕的高度是:"+bodyHeight+",获取屏幕的宽度是: "+bodyWidth);
-  var mevideoDiv = document.getElementById("mevideoDiv");
-  var mewenziDiv = document.getElementById("mewenziDiv");
-  mevideoDiv.setAttribute("style","position:absolute;height:100%;width:100%;");
+    var videoNum;//查看视频的个数
+    var divArray;//存储li数组
+    var currRoomNum;//获取参数roomNum
+    var userID; //用户id
+    var userName; //用户姓名
+    var defaultShowVideo; //默认是否显示视频
+    var currVideoId; //当前正在使用的摄像头id
 
-  //成功创建WebSocket连接
-  rtc.on("connected", function(socket) {
-	var audio = request("audio");
-	var speaker = request("speaker");
-	var videoId = request("videoId");
-	audio=getParams(audio);
-	speaker=getParams(speaker);
-	console.info("音频状态是:"+audio+", speaker:"+speaker);
-	console.info("创建WebSocket的时候audio="+audio);
-    //创建本地视频流
-	if(videoId == "" || videoId == undefined || videoId == null){
-		rtc.createStream({//设置分辨率是320*180//684,513//640*480
-			video: {"mandatory":{"maxWidth":"1920","maxHeight":"1080"},"optional":[{"frameRate":60},{"aspectRatio":16/9}]},
-			audio: audio
-		});
-	}else{
-		rtc.createStream({//设置分辨率是320*180//684,513//640*480
-			video: {mandatory:{"maxWidth":"1920","maxHeight":"1080"},"optional": [{ "sourceId": videoId},{"aspectRatio":16/9}]},
-			audio: audio
-		});
-	}
-  });
-  
-  //创建本地视频流成功
-  rtc.on("stream_created", function(stream) {
-    document.getElementById('me').src = URL.createObjectURL(stream);
-    document.getElementById('me').play();
-	/***********************LX************************/
-	divArray=ul1.getElementsByTagName("li");
-	console.info("创建本地视频的时候divArray.length是: "+divArray.length);
-	divArray[0].setAttribute("style","display:block;width:100%;height:100%;text-align:center;");
-	document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
-      /***************给视频添加文字*start**************/
-      var wenzi = document.createElement("h1");
-      wenzi.innerHTML = userName;
-	  wenzi.setAttribute("style","color:white;font-family:黑体;")
-      mewenziDiv.appendChild(wenzi);
-      mewenziDiv.setAttribute("id","mewenziDiv");
-      mewenziDiv.setAttribute("style","position:absolute;top:7%;right:5%;z-index:100;");
-      mevideoDiv.appendChild(mewenziDiv);
+    function init() {
+        currRoomNum = request("roomNum");
+        userID = request("userId");
+        userName = request("userName");
+        defaultShowVideo = request("defaultShowVideo") || "show";
 
-      /***************给视频添加文字*end****************/
-	/***********************end**********************/	
-  });
-  
-	//页面重新加载
-  	function onload(){
-		if(location.href.indexOf('#reloaded')==-1){
-			location.href=location.href+"#reloaded";
-			location.reload();
-		}
-	}
+        //初始化本地摄像头div样式
+        initLocalVideo();
 
-  //创建本地视频流失败
-  rtc.on("stream_create_error", function() {
-    alert("create stream failed!");
-  });
-  //接收到其他用户的视频流
-  rtc.on('pc_add_stream', function(stream, socketId) {
-    var newVideo = document.createElement("video"),
-        id = "other-" + socketId;
-   // newVideo.setAttribute("class", "other");
-    newVideo.setAttribute("autoplay", "autoplay");
-    newVideo.setAttribute("id", id);
-      newVideo.setAttribute("style","width:100%;height:auto;muted:muted;");//给video视频设置大小样式
-	var videoDiv = document.createElement("li");
-	videoDiv.setAttribute("id",id+"videoDiv");
-//	videoDiv.setAttribute("style","display:block;")
-	videoDiv.appendChild(newVideo);
-    ul1.appendChild(videoDiv);
-      rtc.attachStream(stream, id);
-      /***************给视频添加文字*start**************/
-      var wenziDiv = document.createElement("div"),
-              wenzi = document.createElement("h1");
-      var socketObj = rtc.getUserInfoBySocketId(socketId);
-      wenzi.innerHTML = socketObj.userName;
-	  wenzi.setAttribute("style","color:white;font-family:黑体;")
-      wenziDiv.setAttribute("id",id+"wenziDiv");
-      wenziDiv.setAttribute("style","position:absolute;top:7%;right:5%;z-index:100;");
-      wenziDiv.appendChild(wenzi);
-      videoDiv.appendChild(wenziDiv);
-      /***************给视频添加文字*end****************/
+        var videoName = request("videoName");
+        //去除字符串中的双引号
+        videoName = videoName.replace(/\"/g,"");
 
-
-	newVideo.ondblclick=function(event){
-		newVideo.webkitRequestFullScreen();
-	};
-	videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-	console.info("现在一共有 "+videoNum+" 个视频");
-      console.log("defaultShowVideo==="+defaultShowVideo);
-      if(defaultShowVideo == "show"){
-      }else{
-        var socketObj = rtc.getUserInfoBySocketId(socketId);
-        hideVideo(socketObj.userId);
-        console.log("hideVideo(socketObj.userId)==="+socketObj.userId);
-      }
-	  splitScreen();
-  });
-  /***************************将用户信息放入到map中start*****************************/
-  var socketId_videoSrc_map = new Map();
-  function hideVideo(userId){
-      if(userId == userID){
-          var video = document.getElementById("me");
-          var videoDiv = document.getElementById("mevideoDiv");
-
-      }else{
-          var socketObj = rtc.getUserInfoByUserId(userId);
-          var socketId = socketObj.socketId;
-          var video = document.getElementById('other-' + socketId);
-          var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
-      }
-	socketId_videoSrc_map.put(userId,video.src);
-    if(video){
-	  var videoNum=document.getElementsByTagName("video").length;
-	  var divArray=ul1.getElementsByTagName("li");
-	  var divLength=divArray.length;
-		for(var z=0;z<=divLength;z++){
-			console.info("div的长度------: "+divArray.length);
-			var appendDiv=document.getElementById("appendDiv"+z);
-			if(appendDiv){
-				console.info("删除appendDiv"+z);
-				appendDiv.parentNode.removeChild(appendDiv);
-			}
-	    }
-		video.parentNode.removeChild(video);
-		videoDiv.parentNode.removeChild(videoDiv);
-		//divScreen(videoNum);
-		splitScreen();
-    }
-  }
-  
-  function showVideo(userId){
-	if(userId != null){
-        if(userId == userID){
-            var id = "me";
-        }else{
-            var socketObj = rtc.getUserInfoByUserId(userId);
-            var socketId = socketObj.socketId;
-            var id = "other-" + socketId;
-        }
-        var newVideo = document.createElement("video");
-        newVideo.setAttribute("autoplay", "autoplay");
-		newVideo.setAttribute("id", id);
-        newVideo.setAttribute("style","width:100%;height:auto;muted:muted;");//给video视频设置大小样式
-		newVideo.src = socketId_videoSrc_map.get(userId);
-		
-//      rtc.attachStream(stream, id);
-		var videoDiv = document.createElement("li");
-		videoDiv.setAttribute("id",id+"videoDiv");
-	//	videoDiv.setAttribute("style","display:block;")
-		videoDiv.appendChild(newVideo);
-		ul1.appendChild(videoDiv);
-		splitScreen();
-	}else{
-		alert("error, userId is null;");
-	}
-  }
-  var hiddenVideoBtn = document.getElementById("hideVideo");
-  hiddenVideoBtn.onclick = function(){
-	hideVideo("xibeidiaodu");
-  };
-  
-  var showVideoBtn = document.getElementById("showVideo");
-  showVideoBtn.onclick = function(){
-      showVideo("xibeidiaodu");
-  };
-  /***************************将用户信息放入到map中end*****************************/  
-
-  //删除其他用户
-  rtc.on('remove_peer', function(socketId) {
-    var video = document.getElementById('other-' + socketId);
-	var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
-    if(video){
-	  var videoNum=document.getElementsByTagName("video").length;
-	  var divArray=ul1.getElementsByTagName("li");
-	  var divLength=divArray.length;
-		for(var z=0;z<=divLength;z++){
-			console.info("div的长度------: "+divArray.length);
-			var appendDiv=document.getElementById("appendDiv"+z);
-			if(appendDiv){
-				console.info("删除appendDiv"+z);
-				appendDiv.parentNode.removeChild(appendDiv);
-			}
-	    }
-		video.parentNode.removeChild(video);
-		videoDiv.parentNode.removeChild(videoDiv);
-		//divScreen(videoNum);
-		splitScreen();
-    }
-  });
-  
-/*********************************************************挂断按钮设置*********************************************************/
-  function getVideosNumber(){
-    var videoNumber = document.getElementsByTagName("video").length;
-	return videoNumber;
-  }
-/*********************************************************挂断按钮设置end******************************************************/
-  function join(roomid){
-	if(roomid==null || roomid.length==0){
-		console.log("roomid为空，加入会议失败");
-		return;
-	}
-
-	if(rtc.getUserInfoByUserId(userID)){
-		console.log("会议已经开始，不需要再次join");
-		return;
-	}
-
-	roomNum = roomid;
-	getConnection();
-  }
-  
-  function unjoin(){
-	  roomNum = null;
-	  rtc.unConnect();
-	  location.reload();
-  }
-  
-  function getConnection(){
-	  if(roomNum!=null && roomNum.length>0){
-		  //连接WebSocket服务器
-		  var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
-		  rtc.connect(wsUrl,roomNum, userID, userName);
-		  console.log("连接 WebSocket服务器:"+wsUrl,roomNum);
-	  }else{
-		  console.log("因参数中会议号为空，暂时不初始化websocket连接");
-	  }
-  }
-  setTimeout("getConnection()",parseInt(1200*Math.random()));
-
-  //监听浏览器窗口的大小
-
-  var bigger = document.getElementById("bigger");
-  bigger.onclick=function(){
-		fullScreen();
-  };
-
-/*******************************************************按数字分屏begin************************************************************/
- function divScreen(num){
-		//alert("现在开始 "+num+" 分屏");
-		videoNum=document.getElementsByTagName("video").length;//此处查看一共有几个视频源
-		divArray=ul1.getElementsByTagName("li");
-		var divLength=divArray.length;
-		
-		for(var z=0;z<=divLength;z++){
-			var appendDiv=document.getElementById("appendDiv"+z);
-			if(appendDiv){
-				appendDiv.parentNode.removeChild(appendDiv);
-			}
-	    }
-		
-		if(num===1){
-		if(num<=videoNum){
-			divArray[0].setAttribute("style","");
-			divArray[0].setAttribute("style","width:100%;height:100%;text-align:center;");
-			document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
-				for(var j=num+1;j<=divArray.length && divArray[j];j++){
-					divArray[j].setAttribute("style","display:none;");
-				}
-			}else{
-					for(var x=videoNum+1;x<=num;x++){
-						var li=document.createElement("li");
-						li.setAttribute("id","appendDiv"+x);
-						li.setAttribute("style","overflow:hidden;");
-						var img=document.createElement("img");
-						img.src="/defaultConf.bmp";
-						img.setAttribute("width","100%");
-						li.appendChild(img);
-						ul1.appendChild(li);
-				}
-			divArray[0].setAttribute("style","");
-			divArray[0].setAttribute("style","width:100%;height:100%;text-align:center;");
-			document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
-			}			
-		}
-		if(num===2){//特别注意2分屏和之前的不同
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:100%;width:50%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-					for(var x=videoNum+1;x<=num;x++){
-						var li=document.createElement("li");
-						li.setAttribute("id","appendDiv"+x);
-						li.setAttribute("style","overflow:hidden;");
-						var img=document.createElement("img");
-						img.src="/defaultConf.bmp";
-						img.setAttribute("style","width:100%;height:auto;");
-						li.appendChild(img);
-						ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:100%;width:50%;overflow:hidden;");
-			}		
-		}
-		if(num===3){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:25%;height:50%;width:50%; overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");	
-			for(var j=num+1;j<=divArray.length&& divArray[j];j++){
-					divArray[j].setAttribute("style","display:none;");
-				}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");					
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:25%;height:50%;width:50%; overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");	
-			}
-		}
-		if(num===4){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");	
-				for(var j=num+1;j<=divArray.length && divArray[j];j++){
-					divArray[j].setAttribute("style","display:none;");
-				}
-		}else{
-			for(var x=videoNum+1;x<=num;x++){
-				var li=document.createElement("li");
-				li.setAttribute("id","appendDiv"+x);
-				li.setAttribute("style","overflow:hidden;");
-				var img=document.createElement("img");
-				img.src="/defaultConf.bmp";
-				img.setAttribute("width","100%");
-				li.appendChild(img);
-				ul1.appendChild(li);
-			}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");	
+        //获取摄像头列表，并在获取后进行初始化
+        initAndGetCameraInfos(function(videoInfos){
+            //如果url中未指定摄像头，则自己指定
+            if(videoName == null || videoName.length==0){
+                //获取摄像头列表的第一个摄像头，作为默认摄像头
+                currVideoId = getFreeCamId();
+            }else{  //如果已指定，则需要根据名称获取摄像头id
+                currVideoId = getCameraIdByName(videoName);
             }
-		}
-		if(num===5){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-					divArray[j].setAttribute("style","display:none;");
-				}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
 
-			}
-		}
-		if(num===6){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			}
-		}
-		
-		if(num===7){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			}
-		}
-		
-		if(num===8){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			}
-		}
-		
-		if(num===9){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[8].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			divArray[8].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-			}
-		}
-		
-		if(num===10){
-		if(num<=videoNum){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[8].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[9].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			for(var j=num+1;j<=divArray.length && divArray[j];j++){
-				divArray[j].setAttribute("style","display:none;");
-			}
-			}else{
-				for(var x=videoNum+1;x<=num;x++){
-					var li=document.createElement("li");
-					li.setAttribute("id","appendDiv"+x);
-					li.setAttribute("style","overflow:hidden;");
-					var img=document.createElement("img");
-					img.src="/defaultConf.bmp";
-					img.setAttribute("width","100%");
-					li.appendChild(img);
-					ul1.appendChild(li);
-				}
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[8].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[9].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-			}
-		}
-		drag();//读取位置信息
-  } 
-/******************************************************按数字分屏end**********************************************************/
+            if(currVideoId==null || currVideoId.length==0){
+                console.log("MCU初始化失败，因未获取到有效的摄像头");
+                return;
+            }
 
-  /************************************************自动分屏begin************************************************************/
- 
-  function clearStyle(divArray,videoNum){
-		for(var i=0; i<videoNum; i++){
-			divArray[i].setAttribute("style","");
-			//divArray[i].childNodes.item(0).setAttribute("style","width:100%;height:auto;muted:muted;");
-		}
-	}
-  
-  function splitScreen(){
-  	var videoNum=ul1.getElementsByTagName("video").length;//此处查看一共有几个视频源
-  	var divArray=ul1.getElementsByTagName("li");
-	var divArrayLength = divArray.length;
-	for(var i=0;i<=divArrayLength;i++){
-		var appendDiv=document.getElementById("appendDiv"+i);
-		if(appendDiv){
-			appendDiv.parentNode.removeChild(appendDiv);
-		}
-	}
-	console.info("开始分屏,此时divArray.length: "+divArrayLength+", videoNum:"+videoNum);
-	if(divArrayLength===1){
-		divArray[0].setAttribute("style","");
-		divArray[0].setAttribute("style","width:100%;height:100%;text-align:center;");
-		document.getElementById('me').setAttribute("style","text-align:center;width:100%;height:auto;");
-	}
-	if(divArrayLength===2){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:100%;width:50%;display:none;");
-		//divArray[2].setAttribute("style","position:absolute;left:"+0.5*bodyWidth+"px;top:0;height:"+bodyHeight+"px;width:"+0.5*bodyWidth+"px;");
-		divArray[1].setAttribute("style","text-align:center;width:100%;height:100%;display:block;");
-		
-		/*var shipin1=document.getElementById("shipin1");
-		shipin1.onclick=function(event){
-			divArray[1].childNodes.item(0).webkitRequestFullScreen();
-		}
-		var shipin2=document.getElementById("shipin2")
-		shipin2.onclick=function(event ){
-			divArray[2].childNodes.item(0).webkitRequestFullScreen();
-		}*/
-	}
-	if(divArrayLength===3){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:25%;top:0;height:50%;width:50%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
-        divArray[2].setAttribute("style","position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");	
-	}
-	if(divArrayLength===4){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");
-	}
-	if(divArrayLength===5){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
-		divArray[3].setAttribute("style","position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
-	}
-	if(divArrayLength===6){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[5].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-	}
-	if(divArrayLength===7){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[5].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[6].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-	}
-	if(divArrayLength===8){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[5].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[6].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[7].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-	}
-	if(divArrayLength===9){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[5].setAttribute("style","position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[6].setAttribute("style","position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[7].setAttribute("style","position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-		divArray[8].setAttribute("style","position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
-	}
-	if(divArrayLength===10){
-			clearStyle(divArray,videoNum);
-			divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[1].setAttribute("style","position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
-			divArray[2].setAttribute("style","position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[3].setAttribute("style","position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[4].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[5].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-			divArray[6].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[7].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[8].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-			divArray[9].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-	}
-	if(divArrayLength===16){
-		clearStyle(divArray,videoNum);
-		divArray[0].setAttribute("style","position:absolute;left:0;top:0;height:25%;width:25%;overflow:hidden;");
-		divArray[1].setAttribute("style","position:absolute;left:25%;top:0;height:25%;width:25%;overflow:hidden;");
-		divArray[2].setAttribute("style","position:absolute;left:50%;top:0;height:25%;width:25%;overflow:hidden;");
-        divArray[3].setAttribute("style","position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
-		divArray[4].setAttribute("style","position:absolute;left:0;top:25%;height:25%;width:25%;overflow:hidden;");
-		divArray[5].setAttribute("style","position:absolute;left:25%;top:25%;height:25%;width:25%;overflow:hidden;");
-		divArray[6].setAttribute("style","position:absolute;left:50%;top:25%;height:25%;width:25%;overflow:hidden;");
-		divArray[7].setAttribute("style","position:absolute;left:75%;top:25%;height:25%;width:25%;overflow:hidden;");
-		divArray[8].setAttribute("style","position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[9].setAttribute("style","position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[10].setAttribute("style","position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[11].setAttribute("style","position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
-		divArray[12].setAttribute("style","position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
-        divArray[13].setAttribute("style","position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[14].setAttribute("style","position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
-		divArray[15].setAttribute("style","position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
-	}
-      drag();//读取位置信息
+            if(currRoomNum!=null && currRoomNum.length>0){
+                join(currRoomNum);
+            }
+        });
+    }
 
-      var peers =rtc.peerUserIds;
-      var peersCount = 0;
-      console.log(peers);
-      for(var key in peers){
-          peersCount++;
-      }
-      if(peersCount === 2){
-          //alert("调用  bound.jSVideoNum");
-		  try {
-			  bound.jSVideoNum("'" + videoNum + "'", '');
-		  }catch(error){
-			  console.log("在调用bound.jsVideoNum时出错 + " + error);
-		  }
-      }
-  }
-  /**********************************************自动分屏end**************************************************************/
+    //获取一个可用的摄像头id
+    function getFreeCamId(){
+        var camId;
+        var camInfos = getCameraInfos();
+        for(var cid in camInfos){
+            if(camInfos[cid]!="Virtual Cam"){
+                console.log("由于未指定摄像头，自动获取的摄像头为" + camInfos[cid]);
+                camId = cid;
+                break;
+            }
+        }
+        return camId;
+    }
 
-	//在页面加载完成后，调取摄像头列表
-    getCameraList();
+    //初始化本地视频窗口，默认最大化显示
+    function initLocalVideo() {
+        //默认将本地视频窗口最大化
+        var mevideoDiv = document.getElementById("mevideoDiv");
+        mevideoDiv.setAttribute("style", "position:absolute;height:100%;width:100%;");
+    }
+
+    //连接WebSocket视频控制中心
+    function connectWSServer() {
+        if (!IsStringEmpty(currRoomNum)) {
+            //连接WebSocket服务器
+            var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+            rtc.connect(wsUrl, currRoomNum, userID, userName);
+            console.log("连接 WebSocket服务器:" + wsUrl, currRoomNum);
+        } else {
+            console.log("因参数中会议号为空，暂时不初始化websocket连接");
+        }
+    }
+
+    //成功创建WebSocket连接
+    rtc.on("connected", function (socket) {
+        var audio = request("audio");
+        var speaker = request("speaker");
+        audio = getParams(audio);
+        speaker = getParams(speaker);
+        console.info("音频状态是:" + audio + ", speaker:" + speaker);
+        console.info("创建WebSocket的时候audio=" + audio);
+        //创建本地视频流
+        if (currVideoId == "" || currVideoId == undefined || currVideoId == null) {
+            rtc.createStream({//设置分辨率是320*180//684,513//640*480
+                video: {
+                    "mandatory": {"maxWidth": "1920", "maxHeight": "1080"},
+                    "optional": [{"frameRate": 60}, {"aspectRatio": 16 / 9}]
+                },
+                audio: audio
+            });
+        } else {
+            rtc.createStream({//设置分辨率是320*180//684,513//640*480
+                video: {
+                    mandatory: {"maxWidth": "1920", "maxHeight": "1080"},
+                    "optional": [{"sourceId": currVideoId}, {"aspectRatio": 16 / 9}]
+                },
+                audio: audio
+            });
+        }
+    });
+
+    //创建本地视频流成功
+    rtc.on("stream_created", function (stream) {
+        document.getElementById('me').src = URL.createObjectURL(stream);
+        document.getElementById('me').play();
+        /***********************LX************************/
+        divArray = ul1.getElementsByTagName("li");
+        console.info("创建本地视频的时候divArray.length是: " + divArray.length);
+        divArray[0].setAttribute("style", "display:block;width:100%;height:100%;text-align:center;");
+        document.getElementById('me').setAttribute("style", "text-align:center;width:100%;height:auto;");
+
+        //给视频添加文字
+        var wenzi = document.createElement("h1");
+        wenzi.innerHTML = userName;
+        wenzi.setAttribute("style", "color:white;font-family:黑体;")
+        var mewenziDiv = document.getElementById("mewenziDiv");
+        mewenziDiv.appendChild(wenzi);
+        mewenziDiv.setAttribute("id", "mewenziDiv");
+        mewenziDiv.setAttribute("style", "position:absolute;top:7%;right:5%;z-index:100;");
+        var mevideoDiv = document.getElementById("mevideoDiv");
+        mevideoDiv.appendChild(mewenziDiv);
+    });
+
+    //创建本地视频流失败
+    rtc.on("stream_create_error", function () {
+        alert("create stream failed!");
+    });
+
+    //接收到其他用户的视频流
+    rtc.on('pc_add_stream', function (stream, socketId) {
+        var newVideo = document.createElement("video"),
+                id = "other-" + socketId;
+        // newVideo.setAttribute("class", "other");
+        newVideo.setAttribute("autoplay", "autoplay");
+        newVideo.setAttribute("id", id);
+        newVideo.setAttribute("style", "width:100%;height:auto;muted:muted;");//给video视频设置大小样式
+        var videoDiv = document.createElement("li");
+        videoDiv.setAttribute("id", id + "videoDiv");
+//	videoDiv.setAttribute("style","display:block;")
+        videoDiv.appendChild(newVideo);
+        ul1.appendChild(videoDiv);
+        rtc.attachStream(stream, id);
+        /***************给视频添加文字*start**************/
+        var wenziDiv = document.createElement("div"),
+                wenzi = document.createElement("h1");
+        var socketObj = rtc.getUserInfoBySocketId(socketId);
+        wenzi.innerHTML = socketObj.userName;
+        wenzi.setAttribute("style", "color:white;font-family:黑体;")
+        wenziDiv.setAttribute("id", id + "wenziDiv");
+        wenziDiv.setAttribute("style", "position:absolute;top:7%;right:5%;z-index:100;");
+        wenziDiv.appendChild(wenzi);
+        videoDiv.appendChild(wenziDiv);
+        /***************给视频添加文字*end****************/
+
+
+        newVideo.ondblclick = function (event) {
+            newVideo.webkitRequestFullScreen();
+        };
+        videoNum = document.getElementsByTagName("video").length;//此处查看一共有几个视频源
+        console.info("现在一共有 " + videoNum + " 个视频");
+        console.log("defaultShowVideo===" + defaultShowVideo);
+        if (defaultShowVideo == "show") {
+        } else {
+            var socketObj = rtc.getUserInfoBySocketId(socketId);
+            hideVideo(socketObj.userId);
+            console.log("hideVideo(socketObj.userId)===" + socketObj.userId);
+        }
+        splitScreen();
+    });
+
+    //删除其他用户
+    rtc.on('remove_peer', function (socketId) {
+        var video = document.getElementById('other-' + socketId);
+        var videoDiv = document.getElementById('other-' + socketId + 'videoDiv');
+        if (video) {
+            var videoNum = document.getElementsByTagName("video").length;
+            var divArray = ul1.getElementsByTagName("li");
+            var divLength = divArray.length;
+            for (var z = 0; z <= divLength; z++) {
+                console.info("div的长度------: " + divArray.length);
+                var appendDiv = document.getElementById("appendDiv" + z);
+                if (appendDiv) {
+                    console.info("删除appendDiv" + z);
+                    appendDiv.parentNode.removeChild(appendDiv);
+                }
+            }
+            video.parentNode.removeChild(video);
+            videoDiv.parentNode.removeChild(videoDiv);
+            //divScreen(videoNum);
+            splitScreen();
+        }
+    });
+
+    //获取视频数量
+    function getVideosNumber() {
+        var videoNumber = document.getElementsByTagName("video").length;
+        return videoNumber;
+    }
+
+    //切换摄像头，参数为摄像头名称
+    function switchCamera(camName){
+        var camId = getCameraIdByName(camName);
+        if(camId == null || camId.length==0){
+            console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");
+            return;
+        }
+
+        //如果会议已停止，则不加载摄像头
+        if (!rtc.isLive()) {
+            console.log("当前未参加会议，不必重新加入会议");
+        }else{
+            var roomNum = currRoomNum;
+            unjoin();
+
+            currVideoId = camId;
+            currRoomNum = roomNum;
+            setTimeout("join(" + roomNum +")", parseInt(1200 * Math.random()));
+        }
+    }
+
+    //加入会议室
+    function join(roomid) {
+        if (roomid == null || roomid.length == 0) {
+            console.log("roomid为空，加入会议失败");
+            return;
+        }
+
+        if (rtc.isLive()) {
+            console.log("会议已经开始，不需要再次join");
+            return;
+        }
+
+        //如果没有摄像头，需要再次指定（在不刷新页面的情况下，多次join会出现摄像头错乱，所以重新指定比较好）
+        if(currVideoId == null){
+            currVideoId = getFreeCamId();
+        }
+
+        currRoomNum = roomid;
+        setTimeout("connectWSServer()", parseInt(1200 * Math.random()));
+    }
+
+    //退出会议室，并断开WebSocket连接
+    function unjoin() {
+        currVideoId = null;
+        currRoomNum = null;
+        rtc.unConnect();
+    }
+
+    //清理视频样式
+    function clearStyle(divArray, videoNum) {
+        for (var i = 0; i < videoNum; i++) {
+            divArray[i].setAttribute("style", "");
+            //divArray[i].childNodes.item(0).setAttribute("style","width:100%;height:auto;muted:muted;");
+        }
+    }
+
+    //按数字分屏
+    function divScreen(num) {
+        //alert("现在开始 "+num+" 分屏");
+        videoNum = document.getElementsByTagName("video").length;//此处查看一共有几个视频源
+        divArray = ul1.getElementsByTagName("li");
+        var divLength = divArray.length;
+
+        for (var z = 0; z <= divLength; z++) {
+            var appendDiv = document.getElementById("appendDiv" + z);
+            if (appendDiv) {
+                appendDiv.parentNode.removeChild(appendDiv);
+            }
+        }
+
+        if (num === 1) {
+            if (num <= videoNum) {
+                divArray[0].setAttribute("style", "");
+                divArray[0].setAttribute("style", "width:100%;height:100%;text-align:center;");
+                document.getElementById('me').setAttribute("style", "text-align:center;width:100%;height:auto;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                divArray[0].setAttribute("style", "");
+                divArray[0].setAttribute("style", "width:100%;height:100%;text-align:center;");
+                document.getElementById('me').setAttribute("style", "text-align:center;width:100%;height:auto;");
+            }
+        }
+        if (num === 2) {//特别注意2分屏和之前的不同
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:100%;width:50%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("style", "width:100%;height:auto;");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:100%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:100%;width:50%;overflow:hidden;");
+            }
+        }
+        if (num === 3) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:25%;height:50%;width:50%; overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:25%;height:50%;width:50%; overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");
+            }
+        }
+        if (num === 4) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");
+            }
+        }
+        if (num === 5) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
+
+            }
+        }
+        if (num === 6) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            }
+        }
+
+        if (num === 7) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+            }
+        }
+
+        if (num === 8) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+            }
+        }
+
+        if (num === 9) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[8].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+                divArray[8].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            }
+        }
+
+        if (num === 10) {
+            if (num <= videoNum) {
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[8].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[9].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+                for (var j = num + 1; j <= divArray.length && divArray[j]; j++) {
+                    divArray[j].setAttribute("style", "display:none;");
+                }
+            } else {
+                for (var x = videoNum + 1; x <= num; x++) {
+                    var li = document.createElement("li");
+                    li.setAttribute("id", "appendDiv" + x);
+                    li.setAttribute("style", "overflow:hidden;");
+                    var img = document.createElement("img");
+                    img.src = "/defaultConf.bmp";
+                    img.setAttribute("width", "100%");
+                    li.appendChild(img);
+                    ul1.appendChild(li);
+                }
+                clearStyle(divArray, videoNum);
+                divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+                divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[3].setAttribute("style", "position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[4].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[5].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+                divArray[6].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[7].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[8].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+                divArray[9].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+            }
+        }
+        drag();//读取位置信息
+    }
+
+    //自动分屏
+    function splitScreen() {
+        var videoNum = ul1.getElementsByTagName("video").length;//此处查看一共有几个视频源
+        var divArray = ul1.getElementsByTagName("li");
+        var divArrayLength = divArray.length;
+        for (var i = 0; i <= divArrayLength; i++) {
+            var appendDiv = document.getElementById("appendDiv" + i);
+            if (appendDiv) {
+                appendDiv.parentNode.removeChild(appendDiv);
+            }
+        }
+        console.info("开始分屏,此时divArray.length: " + divArrayLength + ", videoNum:" + videoNum);
+        if (divArrayLength === 1) {
+            divArray[0].setAttribute("style", "");
+            divArray[0].setAttribute("style", "width:100%;height:100%;text-align:center;");
+            document.getElementById('me').setAttribute("style", "text-align:center;width:100%;height:auto;");
+        }
+        if (divArrayLength === 2) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:100%;width:50%;display:none;");
+            //divArray[2].setAttribute("style","position:absolute;left:"+0.5*bodyWidth+"px;top:0;height:"+bodyHeight+"px;width:"+0.5*bodyWidth+"px;");
+            divArray[1].setAttribute("style", "text-align:center;width:100%;height:100%;display:block;");
+
+            /*var shipin1=document.getElementById("shipin1");
+             shipin1.onclick=function(event){
+             divArray[1].childNodes.item(0).webkitRequestFullScreen();
+             }
+             var shipin2=document.getElementById("shipin2")
+             shipin2.onclick=function(event ){
+             divArray[2].childNodes.item(0).webkitRequestFullScreen();
+             }*/
+        }
+        if (divArrayLength === 3) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:25%;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:0;top:50%;width:50%;height:50%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:50%;top:50%;width:50%;height:50%;overflow:hidden;");
+        }
+        if (divArrayLength === 4) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:50%;width:50%;overflow:hidden;");
+        }
+        if (divArrayLength === 5) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:80%;width:100%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:0;top:80%;height:20%;width:25%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:25%;top:80%;height:20%;width:25%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:50%;top:80%;height:20%;width:25%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:75%;top:80%;height:20%;width:25%;overflow:hidden;");
+        }
+        if (divArrayLength === 6) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:66.7%;width:66.7%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+        }
+        if (divArrayLength === 7) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:50%;width:50%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[6].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+        }
+        if (divArrayLength === 8) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:75%;width:75%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:75%;top:25%;height:25%width:25%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[6].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[7].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+        }
+        if (divArrayLength === 9) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:33.3%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:66.7%;top:0;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:0;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:33.3%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:66.7%;top:33.3%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[6].setAttribute("style", "position:absolute;left:0;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[7].setAttribute("style", "position:absolute;left:33.3%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+            divArray[8].setAttribute("style", "position:absolute;left:66.7%;top:66.7%;height:33.3%;width:33.3%;overflow:hidden;");
+        }
+        if (divArrayLength === 10) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:50%;top:0;height:50%;width:50%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[6].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[7].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[8].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[9].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+        }
+        if (divArrayLength === 16) {
+            clearStyle(divArray, videoNum);
+            divArray[0].setAttribute("style", "position:absolute;left:0;top:0;height:25%;width:25%;overflow:hidden;");
+            divArray[1].setAttribute("style", "position:absolute;left:25%;top:0;height:25%;width:25%;overflow:hidden;");
+            divArray[2].setAttribute("style", "position:absolute;left:50%;top:0;height:25%;width:25%;overflow:hidden;");
+            divArray[3].setAttribute("style", "position:absolute;left:75%;top:0;height:25%;width:25%;overflow:hidden;");
+            divArray[4].setAttribute("style", "position:absolute;left:0;top:25%;height:25%;width:25%;overflow:hidden;");
+            divArray[5].setAttribute("style", "position:absolute;left:25%;top:25%;height:25%;width:25%;overflow:hidden;");
+            divArray[6].setAttribute("style", "position:absolute;left:50%;top:25%;height:25%;width:25%;overflow:hidden;");
+            divArray[7].setAttribute("style", "position:absolute;left:75%;top:25%;height:25%;width:25%;overflow:hidden;");
+            divArray[8].setAttribute("style", "position:absolute;left:0;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[9].setAttribute("style", "position:absolute;left:25%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[10].setAttribute("style", "position:absolute;left:50%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[11].setAttribute("style", "position:absolute;left:75%;top:50%;height:25%;width:25%;overflow:hidden;");
+            divArray[12].setAttribute("style", "position:absolute;left:0;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[13].setAttribute("style", "position:absolute;left:25%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[14].setAttribute("style", "position:absolute;left:50%;top:75%;height:25%;width:25%;overflow:hidden;");
+            divArray[15].setAttribute("style", "position:absolute;left:75%;top:75%;height:25%;width:25%;overflow:hidden;");
+        }
+        drag();//读取位置信息
+
+        var peers = rtc.peerUserIds;
+        var peersCount = 0;
+        console.log(peers);
+        for (var key in peers) {
+            peersCount++;
+        }
+        if (peersCount === 2) {
+            //alert("调用  bound.jSVideoNum");
+            try {
+                bound.jSVideoNum("'" + videoNum + "'", '');
+            } catch (error) {
+                console.log("在调用bound.jsVideoNum时出错 + " + error);
+            }
+        }
+    }
+
 </script>
 </html>
