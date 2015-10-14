@@ -406,52 +406,7 @@ var VideoMCU = function () {
         var that = this;
         //绑定视频双击放大事件，即使视频被动态的增减，双击都有效
         $("#" + videoContainerId).on("dblclick","video",function() {
-            //如果是两分屏的双击事件，则忽略掉，因为2分屏实际显示时只显示一个用户视频
-            if(that.currScreenSplitNum == 2){
-                console.log("当前为2分屏，没有必要双击放大");
-                return;
-            }
-
-            //如果当前分屏为多分屏，则进行放大
-            if (that.currScreenSplitNum > 1) {
-                //保存当前分屏信息
-                that.oldScreenSplitNum = that.currScreenSplitNum;
-                that.oldVideoUsers = that.currVideoUsers;
-
-                //获取需要放大的用户
-                //获取当前选中用户id
-                var userid = $(this).attr("id").substr(6);
-                var fullScreenUser;
-                for(var i=0;i<that.currVideoUsers.length;i++){
-                    if(that.currVideoUsers[i].userId === userid){
-                        //复制选中的用户json信息
-                        fullScreenUser = jQuery.extend({},that.currVideoUsers[i]);
-                        break;
-                    }
-                }
-
-                //将选择用户视频最大化
-                if(fullScreenUser!=null){
-                    //将需放大的用户视频位置放到第一个
-                    fullScreenUser.videoPosition = 1;
-                    that.currVideoUsers = [fullScreenUser];
-                    that.currScreenSplitNum = 1;
-                    that.SplitVideoScreen(1);
-                }else{
-                    console.log("未获取到最大化用户，放大失败");
-                }
-            } else if(that.currScreenSplitNum == 1){     //如果当前已经为1分屏，则还原到原先的分屏状态
-                if(that.oldScreenSplitNum == 1){
-                    console.log("原始分屏即为1分屏，不需要处理");
-                    return;
-                }else{
-                    that.currScreenSplitNum = that.oldScreenSplitNum;
-                    that.currVideoUsers = that.oldVideoUsers;
-                    that.oldScreenSplitNum = 0;
-                    that.oldVideoUsers = [];
-                    that.SplitVideoScreen(that.currScreenSplitNum);
-                }
-            }
+            $(this)[0].webkitRequestFullScreen();
         });
     }
 
