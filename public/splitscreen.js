@@ -38,7 +38,7 @@ var VideoMCU = function () {
 			</div>";
 
     //该标签用于定义在视频上面显示的文字样式
-    var VIDEO_TEXT_DIV_FORMAT = "<div style='font-family:黑体;color:#FFF;position:absolute;top:5px;left:5px'>{0}</div>";
+    var VIDEO_TEXT_DIV_FORMAT = "<div style='font-family:黑体;color:#FFF;position:absolute;top:7%;right:5%'>{0}</div>";
 
     /******************************************************************************************************/
     /*表格布局样式，用于视频分屏*/
@@ -307,7 +307,9 @@ var VideoMCU = function () {
             var videoTag = String.format("<video id='{0}' autoplay='true' muted='muted' src='{1}' style='{2}'></video>",
                 videoId, userInfo.videoURL, videoStyle);
 
-            videoTag = this.addVideoText(videoTag, userInfo.userName);
+            if(!IsStringEmpty(userInfo.userName)) {
+                videoTag = this.addVideoText(videoTag, userInfo.userName);
+            }
 
             var wholeTag = String.format(VIDEO_DIV_FORMAT, "div1_" + userInfo.userId, "div2_" + userInfo.userId, videoTag);
             return wholeTag;
