@@ -8,6 +8,7 @@ var port = process.env.PORT || 3000;
 server.listen(port);
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'test')));
 
 app.get('/mcu/removeRoom.do', function(req, res){  /* http://192.168.4.102:3000/mcu/removeRoom.do?roomNum=1 */
     console.log('需要关闭的roomNum='+req.query.roomNum);

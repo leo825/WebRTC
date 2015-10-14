@@ -1,0 +1,63 @@
+﻿<html>
+<header>
+	<style type="text/css">
+	 body {
+		margin: 0px;
+		padding: 0px;
+	}
+	table
+	{
+		margin:0;
+		border-spacing: 0
+	}
+	</style>
+	
+	<script  type="text/javascript">
+		var videotext="<div style='border:0px black solid;width:100%;height:100%;position:relative'>\
+						<div style='border:0px black solid;width:100%;height:100%;position:absolute;overflow: hidden;'>\
+							<video style='position: relative; width:100%;height:auto;' autoplay>\
+							  <source src='movie1.ogg' type='video/ogg'>\
+							</video>\
+							<div style='font-family:黑体;color:#FFF;position:absolute;bottom:5px;left:50%'>\
+							视频文字测试\
+							</div>\
+						</div>\
+					</div>";
+		
+		var imgtext ="<div style='border:0px black solid;width:100%;height:100%;position:relative'>\
+						<div style='border:0px black solid;width:100%;height:100%;position:absolute;overflow: hidden;'>\
+							<img src='defaultConf.bmp'/>\
+						</div>\
+					  </div>";
+		
+		function init(){
+			var tds = document.getElementById("videotable").getElementsByTagName("TD");
+			for(i=0;i < 3;i++){
+				tds[i].innerHTML = videotext;
+			}
+			tds[4].innerHTML = imgtext;
+		}
+	</script>
+</header>
+<body onload="init();" bgcolor="black">
+<table id='videotable' width='100%' height='100%' align='center'> 
+	<tbody> 
+		<tr> 
+			<td colspan='2' rowspan='2' align='center' width='66.7%' height='66.7%'>
+
+			</td> 
+			<td align='center' width='33.3%' height='33.3%'>
+			</td> 
+		</tr> 
+		<tr> 
+			<td align='center' width='33.3%' height='33.3%'></td> 
+		</tr> 
+		<tr> 
+			<td align='center' width='33.3%' height='33.3%'></td> 
+			<td align='center' width='33.3%' height='33.3%'></td> 
+			<td align='center' width='33.3%' height='33.3%'></td> 
+		</tr> 
+	</tbody> 
+</table>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<html>
+<header>
+	<style type="text/css">
+		.container { position:relative; }
+		.container video {
+			position:relative;
+			z-index:0;
+		}
+		.overlay {
+			position:absolute;
+			top:75%;
+			left:50%;
+		}
+	</style>
+	
+</header>
+<body>
+<div class="container">
+    <video id="video" width="770" height="882" onclick="play();">
+        <source src="movie1.ogg" type="video/mp4" />
+    </video>
+    <div class="overlay">
+        <p>Content above your video</p>
+    </div>
+</div>
+</body>
+</html>

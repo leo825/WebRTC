@@ -1,0 +1,51 @@
+﻿<html>
+<head>
+    <title>视频会议室</title>
+    <script src="jquery-1.10.2.js" type="text/javascript"></script>
+    <script src="splitscreenhtml.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var mcu = VideoMCU();
+
+        function init() {
+            mcu.init({
+                "defaultImgPath": "defaultConf.bmp",
+                "videoContainerId": "screenContainer"
+            });
+
+            var user1 = {"userId": "weichi", "userName": "魏驰", "videoPosition": 1, "videoURL": "movie1.ogg"};
+            var user2 = {"userId": "lijinze", "userName": "李金泽", "videoPosition": 2, "videoURL": "movie1.ogg"};
+            var user3 = {"userId": "liuxi", "userName": "刘玺", "videoPosition": 3, "videoURL": "movie1.ogg"};
+            var userInfos = [user1, user2, user3];
+            mcu.SplitVideoScreen(3, userInfos);
+        }
+
+        function splitScreen(count) {
+            mcu.SplitVideoScreen(count);
+        }
+    </script>
+    <style type="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+            background-color: #2E2D2E;
+        }
+    </style>
+</head>
+<body onload="init();">
+<div id="testbuttons">
+    <button id="split1" onclick="splitScreen(1);">1分屏</button>
+    <button id="split2" onclick="splitScreen(2);">2分屏</button>
+    <button id="split3" onclick="splitScreen(3);">3分屏</button>
+    <button id="split4" onclick="splitScreen(4);">4分屏</button>
+    <button id="split5" onclick="splitScreen(5);">5分屏</button>
+    <button id="split6" onclick="splitScreen(6);">6分屏</button>
+    <button id="split7" onclick="splitScreen(7);">7分屏</button>
+    <button id="split8" onclick="splitScreen(8);">8分屏</button>
+    <button id="split9" onclick="splitScreen(9);">9分屏</button>
+    <button id="split10" onclick="splitScreen(10);">10分屏</button>
+    <button id="split13" onclick="splitScreen(13);">13分屏</button>
+    <button id="split16" onclick="splitScreen(16);">16分屏</button>
+</div>
+<div id="screenContainer"/>
+</body>
+</html>
