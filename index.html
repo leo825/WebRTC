@@ -138,13 +138,12 @@
         });
 
         //删除其他用户
-        rtc.on('remove_peer', function (socketId) {
-            var peerInfo = rtc.getUserInfoBySocketId(socketId);
-            if(peerInfo != null && !IsStringEmpty(peerInfo.userId)){
-                console.log("开始从视频列表中删除用户"+peerInfo.userName);
-                mcu.removeUserVideo(peerInfo.userId);
+        rtc.on('remove_peer', function (userId) {
+            if(!IsStringEmpty(userId)){
+                console.log("开始从视频列表中删除用户"+ userId);
+                mcu.removeUserVideo(userId);
             }else{
-                console.warn("remove_peer, 删除用户失败，因参数不全", peerInfo);
+                console.warn("remove_peer, 删除用户失败，因参数不全", userId);
             }
         });
 

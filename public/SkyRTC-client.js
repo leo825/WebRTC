@@ -226,18 +226,23 @@ var SkyRTC = function() {
         });
 
         this.on('_remove_peer', function(data) {
-			console.log("_remove_peer被调用,并且socketId是: "+data.socketId);
+            var userInfo = that.getUserInfoBySocketId(data.socketId);
+			console.log("_remove_peer被调用,被清理的用户为: "+ userInfo.userId);
+
             var sendId;
             that.closePeerConnection(that.peerConnections[data.socketId]);
             delete that.peerConnections[data.socketId];
             delete that.dataChannels[data.socketId];
-            delete that.connections[data.socketId];
+
+            //从connections中删掉socketId
+            that.connections.splice(jQuery.inArray(data.socketId, that.connections), 1);
+
             that.delUserInfo(data.socketId);
             for (sendId in that.fileChannels[data.socketId]) {
                 that.emit("send_file_error", new Error("Connection has been closed"), data.socketId, sendId, that.fileChannels[data.socketId][sendId].file);
             }
             delete that.fileChannels[data.socketId];
-            that.emit("remove_peer", data.socketId);
+            that.emit("remove_peer", userInfo.userId);
         });
 
         this.on('_offer', function(data) {
