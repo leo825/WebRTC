@@ -11,6 +11,14 @@ if (!String.format) {
     };
 }
 
+//判断字符串是否为空
+function IsStringEmpty(str) {
+    if(str && str!='')
+        return false;
+    else
+        return true;
+}
+
 var VideoMCU = function () {
     //用于保存分屏结构的table名称
     var VIDEO_TABLE_NAME = "VideoTable";
@@ -337,6 +345,57 @@ var VideoMCU = function () {
                 }
             }
         }
+
+        /**
+         * 对用户列表的视频位置进行重新编号,从1开始编号（在自动分屏时用到）
+         * @param userInfos
+         */
+        this.reIndexUsers = function(userInfos){
+            //对剩余视频用户进行重新编号
+            for(var i=0;i<userInfos.length;i++){
+                userInfos[i].videoPosition = i+1;
+            }
+
+            return userInfos;
+        }
+
+        /**
+         * 判断用户是否处于MCU视频列表中
+         * @param userId    用户id
+         */
+        this.isUserExists = function(userId){
+            for(var i=0;i<this.currVideoUsers.length;i++){
+                if(this.currVideoUsers[i].userId == userId){
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+
+    /**
+     * 根据当前用户数，获取适合的分屏数
+     * 特别是当用户数量变化的时候，需要重新获取合适的分屏数
+     * @param userCount 用户数量
+     * @returns {*}
+     */
+    videomcu.prototype.getScreenNumByUserNum = function(userCount){
+        var screenNum = 0;
+        if(userCount == null || userCount <=0){
+            console.log("获取分屏数失败，因用户数不合法,", userCount);
+            return null;
+        }
+
+        if(userCount>=1 && userCount<=10){
+            screenNum = userCount;
+        }else if(userCount > 10 && userCount <=13){
+            screenNum = 13;
+        }else if(userCount >13){
+            screenNum = 16;
+        }
+
+        return screenNum;
     }
 
     /**
@@ -417,18 +476,59 @@ var VideoMCU = function () {
 
     /**
      * 增加新的视频用户
-     * @param userId    用户id
      * @param userInfo  用户视频相关信息，如userId、userName、videoURL、videoPostion、videoParam等
      */
-    videomcu.prototype.addUserVideo = function(userId, userInfo){
+    videomcu.prototype.addUserVideo = function(userInfo){
+        var userId = userInfo.userId;
+        if(IsStringEmpty(userId) || IsStringEmpty(userInfo.videoURL)){
+            console.warn("增加视频用户失败，因参数不合法", userInfo);
+            return;
+        }
 
+        if(this.isUserExists(userId)){
+            console.warn("新增视频用户失败，因用户"+ userId+"已存在");
+            return;
+        }
+
+        this.currVideoUsers.push(userInfo);
+        //对视频用户进行重新编号
+        this.currVideoUsers = this.reIndexUsers(this.currVideoUsers);
+
+        //新增用户后，重新分屏
+        var videoCount = this.getScreenNumByUserNum(this.currVideoUsers.length);
+        this.SplitVideoScreen(videoCount);
     }
 
     /**
      * 删除指定的视频用户
      * @param userId    用户id
      */
-    videomcu.prototype.removeUserVideo = function(userId){}
+    videomcu.prototype.removeUserVideo = function(userId){
+        if(IsStringEmpty(userId)){
+            console.warn("移除视频用户失败，因userId为空");
+            return;
+        }
+
+        //查找用户并删除
+        var arrid = null;
+        for(var i=0;i<this.currVideoUsers.length;i++){
+            if(this.currVideoUsers[i].userId == userId){
+                arrid = i;
+                break;
+            }
+        }
+        if(arrid!=null && arrid >= 0){
+            console.log("开始移除用户，并重新分屏");
+            this.currVideoUsers.splice(arrid,1);
+            //对剩余视频用户进行重新编号
+            this.currVideoUsers = this.reIndexUsers(this.currVideoUsers);
+
+            var videoNum = this.getScreenNumByUserNum(this.currVideoUsers.length);
+            this.SplitVideoScreen(videoNum);
+        }else{
+            console.log("移除视频用户失败，未根据用户id[" + userId + "]找到对应的视频用户")
+        }
+    }
 
     /**
      * 对用户视频进行分屏，并附加到指定的容器中
