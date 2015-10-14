@@ -371,6 +371,22 @@ var VideoMCU = function () {
             }
             return false;
         }
+
+        /**
+         * 从用户列表中删除指定的用户
+         * @param userId
+         */
+        this.deleteUserFromUserList = function(userId){
+            var id = null;
+            for(var i=0;i<this.currVideoUsers.length;i++){
+                if(this.currVideoUsers[i].userId == userId){
+                    id = i;
+                }
+            }
+            if(id!=null && id>=0){
+                this.currVideoUsers.splice(id,1);
+            }
+        }
     }
 
 
@@ -441,8 +457,8 @@ var VideoMCU = function () {
         }
 
         if(this.isUserExists(userId)){
-            console.warn("新增视频用户失败，因用户"+ userId+"已存在");
-            return;
+            console.log("用户已存在于原有的会议室中，需要清理掉");
+            this.deleteUserFromUserList(userId);
         }
 
         this.currVideoUsers.push(userInfo);
@@ -465,16 +481,10 @@ var VideoMCU = function () {
         }
 
         //查找用户并删除
-        var arrid = null;
-        for(var i=0;i<this.currVideoUsers.length;i++){
-            if(this.currVideoUsers[i].userId == userId){
-                arrid = i;
-                break;
-            }
-        }
-        if(arrid!=null && arrid >= 0){
+        if(this.isUserExists(userId)){
             console.log("开始移除用户，并重新分屏");
-            this.currVideoUsers.splice(arrid,1);
+            this.deleteUserFromUserList(userId);
+
             //对剩余视频用户进行重新编号
             this.currVideoUsers = this.reIndexUsers(this.currVideoUsers);
 
