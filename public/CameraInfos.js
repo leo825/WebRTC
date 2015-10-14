@@ -21,6 +21,23 @@ function getCameraInfos(){
 }
 
 /**
+ * 获取一个可用的摄像头id
+ * @returns {*}
+ */
+function getFreeCamId(){
+    var camId;
+    var camInfos = getCameraInfos();
+    for(var cid in camInfos){
+        if(camInfos[cid]!="Virtual Cam"){
+            console.log("由于未指定摄像头，自动获取的摄像头为" + camInfos[cid]);
+            camId = cid;
+            break;
+        }
+    }
+    return camId;
+}
+
+/**
  * 根据摄像头名称获取摄像头id，前提条件是之前已经调用过initAndgetCameraInfos()方法
  * @param name  摄像头名称
  * @return 摄像头id
