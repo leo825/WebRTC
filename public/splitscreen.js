@@ -261,11 +261,6 @@ var VideoMCU = function () {
         //当前分屏数量
         this.currScreenSplitNum = 0;
 
-        //用于存储双击放大时原有的分屏信息
-        this.oldVideoUsers = [];
-        //用于存储双击放大时原有的分屏数量
-        this.oldScreenSplitNum = 0;
-
         /**
          * 获取分屏布局的html
          * @param screenCount   分屏的数量
@@ -445,6 +440,14 @@ var VideoMCU = function () {
 
         //初始化视频最大时的相关操作
         this.initEnlargeVideo(infos.videoContainerId);
+    }
+
+    /**
+     * 清理分屏页面，并回复到初始状态
+     */
+    videomcu.prototype.cleanUp = function(){
+        $("#" + this.videoContainerId).html("");
+        this.currVideoUsers = [];
     }
 
     /**
