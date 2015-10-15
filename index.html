@@ -16,7 +16,7 @@
     <script type="text/javascript" src="move.js"></script>
     <script type="text/javascript" src="splitscreen.js"></script>
     <script type="text/javascript">
-        var  rtc = SkyRTC();
+        var  rtc;
         var mcu = VideoMCU();   //分屏MCU
 
         var currRoomNum;//获取参数roomNum
@@ -31,6 +31,8 @@
             userName = request("userName");
             defaultShowVideo = request("defaultShowVideo") || "show";
 
+            //初始化RTC相关的回调函数
+            initRTC();
             //初始化MCU分屏功能
             mcu.init({
                 "defaultImgPath": "defaultConf.bmp",    //无视频时的默认图片路径
@@ -62,6 +64,88 @@
             });
         }
 
+        function initRTC(){
+            rtc = SkyRTC();
+
+            //成功创建WebSocket连接
+            rtc.on("socket_connected", function (socket) {
+                var audio = request("audio");
+                var speaker = request("speaker");
+                audio = getParams(audio);
+                speaker = getParams(speaker);
+                console.info("音频状态是:" + audio + ", speaker:" + speaker);
+                console.info("创建WebSocket的时候audio=" + audio);
+                //创建本地视频流
+                if (currVideoId == "" || currVideoId == undefined) {
+                    console.log("摄像头未指定，使用默认摄像头来进行rtc.createStream");
+                    currVideoId = null;
+                }
+
+                rtc.createStream({//设置分辨率是320*180//684,513//640*480
+                    video: {
+                        mandatory: {"maxWidth": "1920", "maxHeight": "1080"},
+                        "optional": [{"sourceId": currVideoId}, {"frameRate": 60}, {"aspectRatio": 16 / 9}]
+                    },
+                    audio: audio
+                });
+            });
+
+            //断开WebSocket连接
+            rtc.on("socket_closed", function(socket){
+                console.log("WebSocket连接已断开，开始重置RTC与MCU");
+                //断开后重新初始化rtc，防止后面再次调用
+                initRTC();
+                //清理页面
+                mcu.cleanUp();
+                console.log("RTC与MCU重置完毕");
+            });
+
+            //创建本地视频流成功
+            rtc.on("stream_created", function (stream) {
+                var myVideoUrl = URL.createObjectURL(stream);
+                var user1 = {"userId": userID, "userName":userName, "videoPosition": 1, "videoURL": myVideoUrl};
+                mcu.SplitVideoScreen(1, [user1]);
+            });
+
+            //创建本地视频流失败
+            rtc.on("stream_create_error", function () {
+                console.warn("创建本地视频流失败");
+            });
+
+            //接收到其他用户的视频流
+            rtc.on('pc_add_stream', function (stream, socketId) {
+                var peerInfo = rtc.getUserInfoBySocketId(socketId);
+                    if(peerInfo != null && !IsStringEmpty(peerInfo.userId)){
+                        console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
+                        var myVideoUrl = URL.createObjectURL(stream);
+                        var user = {"userId": peerInfo.userId, "userName":peerInfo.userName, "videoURL": myVideoUrl};
+                        mcu.addUserVideo(user);
+
+                    if(Object.keys(rtc.peerConnections).length === 1){
+                        //alert("调用  bound.jSVideoNum");
+                        console.log("开始调用bound.JSVideoNum...")
+                        try {
+                            bound.jSVideoNum("'2'", '');
+                        }catch(error){
+                            console.log("在调用bound.jsVideoNum时出错 + " + error);
+                        }
+                    }
+                }else{
+                    console.warn("pc_add_stream, 增加新用户失败，因参数不全", peerInfo);
+                }
+            });
+
+            //删除其他用户
+            rtc.on('remove_peer', function (userId) {
+                if(!IsStringEmpty(userId)){
+                    console.log("开始从视频列表中删除用户"+ userId);
+                    mcu.removeUserVideo(userId);
+                }else{
+                    console.warn("remove_peer, 删除用户失败，因参数不全", userId);
+                }
+            });
+        }
+
         //连接WebSocket视频控制中心
         function connectWSServer() {
             if (!IsStringEmpty(currRoomNum)) {
@@ -73,79 +157,6 @@
                 console.log("因参数中会议号为空，暂时不初始化websocket连接");
             }
         }
-
-        //成功创建WebSocket连接
-        rtc.on("connected", function (socket) {
-            var audio = request("audio");
-            var speaker = request("speaker");
-            audio = getParams(audio);
-            speaker = getParams(speaker);
-            console.info("音频状态是:" + audio + ", speaker:" + speaker);
-            console.info("创建WebSocket的时候audio=" + audio);
-            //创建本地视频流
-            if (currVideoId == "" || currVideoId == undefined || currVideoId == null) {
-                rtc.createStream({//设置分辨率是320*180//684,513//640*480
-                    video: {
-                        "mandatory": {"maxWidth": "1920", "maxHeight": "1080"},
-                        "optional": [{"frameRate": 60}, {"aspectRatio": 16 / 9}]
-                    },
-                    audio: audio
-                });
-            } else {
-                rtc.createStream({//设置分辨率是320*180//684,513//640*480
-                    video: {
-                        mandatory: {"maxWidth": "1920", "maxHeight": "1080"},
-                        "optional": [{"sourceId": currVideoId}, {"aspectRatio": 16 / 9}]
-                    },
-                    audio: audio
-                });
-            }
-        });
-
-        //创建本地视频流成功
-        rtc.on("stream_created", function (stream) {
-            var myVideoUrl = URL.createObjectURL(stream);
-            var user1 = {"userId": userID, "userName":userName, "videoPosition": 1, "videoURL": myVideoUrl};
-            mcu.SplitVideoScreen(1, [user1]);
-        });
-
-        //创建本地视频流失败
-        rtc.on("stream_create_error", function () {
-            console.warn("创建本地视频流失败");
-        });
-
-        //接收到其他用户的视频流
-        rtc.on('pc_add_stream', function (stream, socketId) {
-            var peerInfo = rtc.getUserInfoBySocketId(socketId);
-            if(peerInfo != null && !IsStringEmpty(peerInfo.userId)){
-                console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
-                var myVideoUrl = URL.createObjectURL(stream);
-                var user = {"userId": peerInfo.userId, "userName":peerInfo.userName, "videoURL": myVideoUrl};
-                mcu.addUserVideo(user);
-
-                if(Object.keys(rtc.peerConnections).length === 1){
-                    //alert("调用  bound.jSVideoNum");
-                    console.log("开始调用bound.JSVideoNum...")
-                    try {
-                        bound.jSVideoNum("'2'", '');
-                    }catch(error){
-                        console.log("在调用bound.jsVideoNum时出错 + " + error);
-                    }
-                }
-            }else{
-                console.warn("pc_add_stream, 增加新用户失败，因参数不全", peerInfo);
-            }
-        });
-
-        //删除其他用户
-        rtc.on('remove_peer', function (userId) {
-            if(!IsStringEmpty(userId)){
-                console.log("开始从视频列表中删除用户"+ userId);
-                mcu.removeUserVideo(userId);
-            }else{
-                console.warn("remove_peer, 删除用户失败，因参数不全", userId);
-            }
-        });
 
         //切换摄像头，参数为摄像头名称
         function switchCamera(camName){
@@ -199,7 +210,11 @@
         function unjoin() {
             currVideoId = null;
             currRoomNum = null;
-            rtc.unConnect();
+            if(rtc.isLive()){
+                rtc.unConnect();
+            }else{
+                console.log("rtc连接已处于关闭状态，不需要再次关闭");
+            }
         }
 
         //按数字分屏

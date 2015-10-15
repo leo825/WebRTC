@@ -205,7 +205,7 @@ var SkyRTC = function() {
             }
 
             that.emit("get_peers", that.connections);
-            that.emit('connected', socket);
+            that.emit('socket_connected', socket);
         });
 
         this.on("_ice_candidate", function(data) {
