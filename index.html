@@ -123,8 +123,8 @@
                 var user = {"userId": peerInfo.userId, "userName":peerInfo.userName, "videoURL": myVideoUrl};
                 mcu.addUserVideo(user);
 
-                if(rtc.peerConnections.length === 2){
-                   //alert("调用  bound.jSVideoNum");
+                if(Object.keys(rtc.peerConnections).length === 1){
+                    //alert("调用  bound.jSVideoNum");
                     console.log("开始调用bound.JSVideoNum...")
                     try {
                         bound.jSVideoNum("'2'", '');
