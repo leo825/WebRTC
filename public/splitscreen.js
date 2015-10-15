@@ -555,7 +555,7 @@ var VideoMCU = function () {
         //如果是3分屏，则调整第一屏的样式，避免被拉的很宽
         if(screenNum == 3){
             console.log("3分屏，需要调整第一屏样式，居中显示");
-            $("td:first div").find("div:first").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
+            $("td:first div").find("div[id^='div2_']").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
         }
     }
 
