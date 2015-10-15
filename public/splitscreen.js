@@ -61,11 +61,11 @@ var VideoMCU = function () {
     var VIDEO_SPLIT_LAYOUT3 = "<table id='VideoTable' style='margin:0;border-spacing:0;' width='100%' height='100%' align='center'>\
 	<tbody>\
 		<tr>\
-			<td colspan='2' align='center' heigth='60%'></td>\
+			<td colspan='2' align='center' heigth='50%'></td>\
 		</tr>\
 		<tr>\
-			<td align='center' width='50%' height='40%'></td>\
-			<td align='center' width='50%' height='40%'></td>\
+			<td align='center' width='50%' height='50%'></td>\
+			<td align='center' width='50%' height='50%'></td>\
 		</tr>\
 	</tbody>\
 </table>";
@@ -547,6 +547,12 @@ var VideoMCU = function () {
 
             //将视频附加到页面表格中
             this.attachVideoToTable(videoTagList, VIDEO_TABLE_NAME);
+        }
+
+        //如果是3分屏，则调整第一屏的样式，避免被拉的很宽
+        if(screenNum == 3){
+            console.log("3分屏，需要调整第一屏样式，居中显示");
+            $("td:first div").find("div:first").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
         }
     }
 
