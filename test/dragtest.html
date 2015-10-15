@@ -1,0 +1,92 @@
+﻿<html>
+<head>
+    <title></title>
+    <script src="jquery-1.10.2.js" type="text/javascript"></script>
+    <script src="jquery-ui-1.10.1.min.js" type="text/javascript"></script>
+    <script src="splitscreen.js" type="text/javascript"></script>
+    <style  type="text/css">
+        table,td{
+            border: 1px solid red;
+        }
+        div{
+            border: 1px solid blue;
+        }
+        .myclass{
+            width:200px;
+            height:200px;
+        }
+
+    </style>
+    <script>
+        /**
+         * 拖拽参考资料：
+         * http://stackoverflow.com/questions/11724908/jquery-ui-draggable-and-adding-class-on-drag-event
+         * http://stackoverflow.com/questions/7206622/add-css-class-to-an-element-while-dragging-over-w-jquery
+         * http://www.authorcode.com/swap-elements-when-drag-one-onto-another-using-jquery-ui/
+         */
+        var mcu = VideoMCU();
+
+        function init() {
+            mcu.init({
+                "defaultImgPath": "defaultConf.bmp",
+                "videoContainerId": "videoContainer"
+            });
+
+            var user1 = {"userId": "weichi", "userName": "魏驰", "videoPosition": 1, "videoURL": "movie1.ogg"};
+            var user2 = {"userId": "lijinze", "userName": "李金泽", "videoPosition": 2, "videoURL": "movie1.ogg"};
+            var user3 = {"userId": "liuxi", "userName": "刘玺", "videoPosition": 3, "videoURL": "movie1.ogg"};
+            var user4 = {"userId": "sunsiyuan", "userName": "孙思远", "videoPosition": 4, "videoURL": "movie1.ogg"};
+            var user5 = {"userId": "fangkun", "userName": "方堃", "videoPosition": 5, "videoURL": "movie1.ogg"};
+            var userInfos = [user1, user2, user3, user4, user5];
+            mcu.SplitVideoScreen(7, userInfos);
+        }
+
+        $(function () {
+            init();
+            initSwap();
+            function initSwap() {
+                initDroppable($("div[id^='div1_']"));
+                initDraggable($("div[id^='div1_']"));
+            }
+
+            function initDraggable($elements) {
+                $elements.draggable({
+                    appendTo: "body",
+                    helper: "clone",
+                    cursor: "move",
+                    revert: "invalid",
+                    start: function(event,ui){
+                        $(this).attr("style","");
+                        $(this).addClass('myclass');
+                    }
+                });
+            }
+
+            function initDroppable($elements) {
+                $elements.droppable({
+                    activeClass: "ui-state-default",
+                    hoverClass: "ui-drop-hover",
+                    accept: ":not(.ui-sortable-helper)",
+
+                    over: function (event, ui) {
+                        var $this = $(this);
+                    },
+                    drop: function (event, ui) {
+                        var $this = $(this);
+
+                        var linew1 = $(this).after(ui.draggable.clone());
+                        var linew2 = $(ui.draggable).after($(this).clone());
+                        $(ui.draggable).remove();
+                        $(this).remove();
+                        initSwap();
+                    }
+                });
+            }
+        });
+    </script>
+
+</head>
+<body>
+<div id="videoContainer"/>
+</body>
+</html>

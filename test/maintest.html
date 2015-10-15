@@ -4,6 +4,16 @@
     <script src="jquery-1.10.2.js" type="text/javascript"></script>
     <script src="splitscreen.js" type="text/javascript"></script>
     <script type="text/javascript">
+
+        //用于交换页面元素位置
+        var exchange = function(a,b){
+            var aParent = a.parent();
+            var bParent = b.parent();
+            var aHtml = aParent.html();
+            aParent.html(bParent.html());
+            bParent.html(aHtml);
+        };
+
         var mcu = VideoMCU();
 
         function init() {
