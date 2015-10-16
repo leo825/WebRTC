@@ -1,4 +1,11 @@
-﻿//下面的方法用于字符串格式化
+﻿/**
+ * Description:  该插件用于实现MCU分屏功能，并提供双击放大、拖拽交换、视频文字显示等功能
+ * Dependency：  jquery-1.10.2.js  jquery-ui-1.10.1.min.js
+ * Author：      wchi
+ * Date：        2015.10.16
+ */
+
+//下面的方法用于字符串格式化
 if (!String.format) {
     String.format = function (format) {
         var args = Array.prototype.slice.call(arguments, 1);
@@ -424,6 +431,54 @@ var VideoMCU = function () {
     }
 
     /**
+     * 初始化视频拖动事件，用于视频拖动交换
+     */
+    videomcu.prototype.initSwapVideo = function(){
+        var originalElementHtml;
+        initSwap();
+        function initSwap() {
+            initDroppable($("div[id^='div1_']"));
+            initDraggable($("div[id^='div1_']"));
+        }
+
+        function initDraggable($elements) {
+            $elements.draggable({
+                appendTo: "body",
+                helper: "original",
+                cursor: "move",
+                revert: "invalid",
+                start: function(event,ui){
+                    originalElementHtml = $(this).parent().html();
+                }
+            });
+        }
+
+        function initDroppable($elements) {
+            $elements.droppable({
+                activeClass: "ui-state-default",
+                hoverClass: "ui-drop-hover",
+                accept: ":not(.ui-sortable-helper)",
+                drop: function (event, ui) {
+                    var targetHtml = $(this).parent().html();
+                    $(this).parent().html(originalElementHtml);
+                    $(ui.draggable).parent().html(targetHtml);
+                    initSwap();
+                }
+            });
+        }
+
+        function swapElement(ele1,ele2){
+            var ele1Parent = ele1.parent();
+            var ele2Parent = ele2.parent();
+
+            var ele1Html = ele1Parent.html();
+            ele1Parent.html(ele2Parent.html());
+            ele2Parent.html(ele1Html);
+        }
+    }
+
+
+    /**
      * 用于初始化分屏设置，比如设置默认图片等
      * @param infos 用于初始化的相关属性，包含以下信息：
      *               defaultImgPath:  无视频显示的默认图片地址
@@ -556,6 +611,13 @@ var VideoMCU = function () {
         if(screenNum == 3){
             console.log("3分屏，需要调整第一屏样式，居中显示");
             $("td:first div").find("div[id^='div2_']").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
+        }else{  //因3分屏的样式做了定制，所以在视频拖动交换时会出现样式混乱，暂时不支持3分屏的拖拽
+            //在视频分屏完毕后，初始化视频拖动交换
+            try{
+                this.initSwapVideo();
+            }catch(err){
+                console.warn("不存在JQuery Draggable和Droppable插件，无法初始化视频拖动交换");
+            }
         }
     }
 

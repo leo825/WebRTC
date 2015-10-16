@@ -26,8 +26,9 @@
          */
         var mcu = VideoMCU();
 
+
         function init() {
-            mcu.init({
+             mcu.init({
                 "defaultImgPath": "defaultConf.bmp",
                 "videoContainerId": "videoContainer"
             });
@@ -42,8 +43,9 @@
         }
 
         $(function () {
+            var originalElementHtml;
             init();
-            initSwap();
+            //initSwap();
             function initSwap() {
                 initDroppable($("div[id^='div1_']"));
                 initDraggable($("div[id^='div1_']"));
@@ -52,12 +54,11 @@
             function initDraggable($elements) {
                 $elements.draggable({
                     appendTo: "body",
-                    helper: "clone",
+                    helper: "original",
                     cursor: "move",
                     revert: "invalid",
                     start: function(event,ui){
-                        $(this).attr("style","");
-                        $(this).addClass('myclass');
+                        originalElementHtml = $(this).parent().html();
                     }
                 });
             }
@@ -67,20 +68,22 @@
                     activeClass: "ui-state-default",
                     hoverClass: "ui-drop-hover",
                     accept: ":not(.ui-sortable-helper)",
-
-                    over: function (event, ui) {
-                        var $this = $(this);
-                    },
                     drop: function (event, ui) {
-                        var $this = $(this);
-
-                        var linew1 = $(this).after(ui.draggable.clone());
-                        var linew2 = $(ui.draggable).after($(this).clone());
-                        $(ui.draggable).remove();
-                        $(this).remove();
+                        var targetHtml = $(this).parent().html();
+                        $(this).parent().html(originalElementHtml);
+                        $(ui.draggable).parent().html(targetHtml);
                         initSwap();
                     }
                 });
+            }
+
+            function swapElement(ele1,ele2){
+                var ele1Parent = ele1.parent();
+                var ele2Parent = ele2.parent();
+
+                var ele1Html = ele1Parent.html();
+                ele1Parent.html(ele2Parent.html());
+                ele2Parent.html(ele1Html);
             }
         });
     </script>
