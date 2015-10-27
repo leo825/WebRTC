@@ -427,6 +427,9 @@ var VideoMCU = function () {
         //绑定视频双击放大事件，即使视频被动态的增减，双击都有效
         $("#" + videoContainerId).on("dblclick","video",function() {
             $(this)[0].webkitRequestFullScreen();
+            if (document.webkitExitFullscreen){
+                $(this)[0].webkitExitFullscreen();
+            }
         });
     }
 
@@ -435,6 +438,8 @@ var VideoMCU = function () {
      */
     videomcu.prototype.initSwapVideo = function(){
         var originalElementHtml;
+        var tagetDraggableStyle;
+        var tagetDraggable;
         initSwap();
         function initSwap() {
             initDroppable($("div[id^='div1_']"));
@@ -449,6 +454,9 @@ var VideoMCU = function () {
                 revert: "invalid",
                 start: function(event,ui){
                     originalElementHtml = $(this).parent().html();
+                    tagetDraggable = $(this).parent().clone(true);//克隆一个拖动元素的父元素的节点
+                    tagetDraggableStyle = tagetDraggable.children("div").children("div").get(0).style.cssText;//获取div2_元素的样式
+                    console.log("tagetDraggableStyle: "+tagetDraggableStyle);
                 }
             });
         }
@@ -460,8 +468,18 @@ var VideoMCU = function () {
                 accept: ":not(.ui-sortable-helper)",
                 drop: function (event, ui) {
                     var targetHtml = $(this).parent().html();
-                    $(this).parent().html(originalElementHtml);
-                    $(ui.draggable).parent().html(targetHtml);
+                    var targetDroppable = $(this).parent().clone(true);//克隆一个被覆盖元素的父节点
+                    var targetDroppableStyle = targetDroppable.children("div").children("div").get(0).style.cssText;//获取被覆盖元素div2_元素的样式
+                   // var targetDroppableFirstChild = targetDroppable.children("div").children("div").get(0);获取div2元素
+
+                    targetDroppable.children("div").children("div").get(0).setAttribute("style",tagetDraggableStyle);//被覆盖方的div2_样式修改为拖拽元素的样式
+                    $(ui.draggable).parent().html(targetDroppable.html());//将被覆盖元素放到拖拽方的位置
+                    console.log("拖拽元素位置填充："+targetDroppable.html());
+
+                    tagetDraggable.children("div").children("div").get(0).setAttribute("style",targetDroppableStyle);//被拖拽方的div2_样式修改为被覆盖元素的样式
+                    $(this).parent().html(tagetDraggable.html());//将拖拽元素放到被覆盖元素方的位置
+                    console.log("被覆盖元素位置填充："+tagetDraggable.html());
+
                     initSwap();
                 }
             });
@@ -611,14 +629,9 @@ var VideoMCU = function () {
         if(screenNum == 3){
             console.log("3分屏，需要调整第一屏样式，居中显示");
             $("td:first div").find("div[id^='div2_']").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
-        }else{  //因3分屏的样式做了定制，所以在视频拖动交换时会出现样式混乱，暂时不支持3分屏的拖拽
-            //在视频分屏完毕后，初始化视频拖动交换
-            try{
-                this.initSwapVideo();
-            }catch(err){
-                console.warn("不存在JQuery Draggable和Droppable插件，无法初始化视频拖动交换");
-            }
+            this.initSwapVideo();
         }
+        this.initSwapVideo();
     }
 
     return new videomcu();
