@@ -279,13 +279,18 @@ var VideoMCU = function () {
         }
 
         /**
+         * 获取无视频时显示的默认图片div
+         */
+        this.getDefaultImgDiv = function(){
+            return String.format(DEFAULT_IMG_DIV_FORMAT, this.defaultImgPath);
+        }
+
+        /**
          * 将视频附加到页面表格中
          * @param videoTagList  包含所有视频标签
          * @param tableName     需要附加视频的表格名称
          */
         this.attachVideoToTable = function (videoTagList, tableName) {
-            //用于填充空白视频的图片
-            var defaultImgTag = String.format(DEFAULT_IMG_DIV_FORMAT, this.defaultImgPath);
             var tds = document.getElementById(tableName).getElementsByTagName("TD");
 
             var videoTag;
@@ -294,7 +299,7 @@ var VideoMCU = function () {
                 if (videoTag != null) {
                     tds[i].innerHTML = videoTagList[i + 1];
                 } else {
-                    tds[i].innerHTML = defaultImgTag;
+                    tds[i].innerHTML = this.getDefaultImgDiv();
                 }
             }
         }
@@ -542,14 +547,10 @@ var VideoMCU = function () {
 
         //查找用户并删除
         if(this.isUserExists(userId)){
-            console.log("开始移除用户，并重新分屏");
+            console.log("开始移除用户，并将被移出视频位置置为默认图片");
             this.deleteUserFromUserList(userId);
 
-            //对剩余视频用户进行重新编号
-            this.currVideoUsers = this.reIndexUsers(this.currVideoUsers);
-
-            var videoNum = this.getScreenNumByUserNum(this.currVideoUsers.length);
-            this.SplitVideoScreen(videoNum);
+            $("#div1_" + userId).parent().html(this.getDefaultImgDiv());
         }else{
             console.log("移除视频用户失败，未根据用户id[" + userId + "]找到对应的视频用户")
         }
