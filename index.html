@@ -11,6 +11,9 @@
         }
         .mute_image{position:absolute; left:5%; top:7%;}
 
+        #debugdiv{
+           display: none;
+        }
     </style>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
     <script type="text/javascript" src="jquery-1.10.2.js"></script>
@@ -125,7 +128,7 @@
                         var user = {"userId": peerInfo.userId, "userName":peerInfo.userName, "videoURL": myVideoUrl};
                         mcu.addUserVideo(user);
 
-                    if(Object.keys(rtc.peerConnections).length === 1){
+                    if(Object.keys(rtc.peerConnections).length >= 1){
                         //alert("调用  bound.jSVideoNum");
                         console.log("开始调用bound.JSVideoNum...")
                         try {
@@ -230,6 +233,20 @@
     </script>
 </head>
 <body onload="init();">
+<div id="debugdiv">
+    <button id="split1" onclick="divScreen(1);">1分屏</button>
+    <button id="split2" onclick="divScreen(2);">2分屏</button>
+    <button id="split3" onclick="divScreen(3);">3分屏</button>
+    <button id="split4" onclick="divScreen(4);">4分屏</button>
+    <button id="split5" onclick="divScreen(5);">5分屏</button>
+    <button id="split6" onclick="divScreen(6);">6分屏</button>
+    <button id="split7" onclick="divScreen(7);">7分屏</button>
+    <button id="split8" onclick="divScreen(8);">8分屏</button>
+    <button id="split9" onclick="divScreen(9);">9分屏</button>
+    <button id="split10" onclick="divScreen(10);">10分屏</button>
+    <button id="split13" onclick="divScreen(13);">13分屏</button>
+    <button id="split16" onclick="divScreen(16);">16分屏</button>
+</div>
 <div id="screenContainer"/>
 </body>
 </html>
