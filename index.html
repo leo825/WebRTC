@@ -9,6 +9,8 @@
             background-color: #2E2D2E;
             overflow:hidden;
         }
+        .mute_image{position:absolute; left:5%; top:7%;}
+
     </style>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
     <script type="text/javascript" src="jquery-1.10.2.js"></script>
@@ -37,7 +39,8 @@
             //初始化MCU分屏功能
             mcu.init({
                 "defaultImgPath": "defaultConf.bmp",    //无视频时的默认图片路径
-                "videoContainerId": "screenContainer"   //视频容器div
+                "videoContainerId": "screenContainer",  //视频容器div
+                "localVideoUserId": userID
             });
 
             var videoName = request("videoName");
