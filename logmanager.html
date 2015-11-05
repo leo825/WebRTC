@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="jquery-1.10.2.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function init(){
+            //获取日志文件列表
+            $.ajax({
+                url:"getloglist",
+                type:"get",
+                success:function(data){
+                    initTable(data);
+                }
+            })
+        }
+
+        function download(fileName){
+            window.location.href ="downloadlog?fileName="+fileName;
+        }
+
+        function initTable(fileList){
+            var table = $("<table border='1'>");
+            table.appendTo($("#mydiv"));
+            var theader = $("<tr><th>文件名称</th><th>操作</th></tr> ");
+            theader.appendTo(table);
+            for(var i=0;i<fileList.length;i++){
+                var tr=$("<tr></tr>");
+                tr.appendTo(table);
+
+                var td = $("<td>" + fileList[i] + "</td>");
+                td.appendTo(tr);
+                var td = $("<td><input type='button' value='下载' onclick=\"download('" + fileList[i] +"')\"/></td>");
+                td.appendTo(tr);
+           }
+        }
+    </script>
+</head>
+<body onload="init();">
+<div id="mydiv"/>
+</body>
+</html>

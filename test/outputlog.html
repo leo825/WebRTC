@@ -1,0 +1,57 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="jquery-1.10.2.js" type="text/javascript"></script>
+    <script src="jquery-ui-1.10.1.min.js" type="text/javascript"></script>
+    <script src="debugout.js" type="text/javascript"></script>
+    <style type="text/css">
+        .logDiv {
+            border: 1px solid red;
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 300px;
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        var bugout = new debugout();
+
+        function outputLog(logInfo) {
+            var myDate = new Date();
+            bugout.log(myDate.toLocaleString() + ": 点击了一次.");
+        }
+
+        function logToServer() {
+            var logInfo = bugout.getLog()
+            $.post('uploadlog', {
+                        userId: "weichi",
+                        logData: logInfo
+                    },
+                    function (response, status) {
+                        alert("日志上传失败");
+                    }
+            );
+        }
+    </script>
+</head>
+<body>
+<div id="debugdiv">
+    <button id="split1" onclick="divScreen(1);">1分屏</button>
+    <button id="split2" onclick="divScreen(2);">2分屏</button>
+    <button id="split3" onclick="divScreen(3);">3分屏</button>
+    <button id="split4" onclick="divScreen(4);">4分屏</button>
+    <button id="split5" onclick="divScreen(5);">5分屏</button>
+    <button id="split6" onclick="divScreen(6);">6分屏</button>
+    <button id="split7" onclick="divScreen(7);">7分屏</button>
+    <button id="split8" onclick="divScreen(8);">8分屏</button>
+    <button id="split9" onclick="divScreen(9);">9分屏</button>
+    <button id="split10" onclick="divScreen(10);">10分屏</button>
+    <button id="split13" onclick="divScreen(13);">13分屏</button>
+    <button id="split16" onclick="divScreen(16);">16分屏</button>
+</div>
+<input type="button" id="logbtn" value="点我出日志" onclick="outputLog();"/>
+<input type="button" id="logtofile" value="导出日志" onclick="logToServer();"/>
+</body>
+</html>
