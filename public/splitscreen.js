@@ -47,6 +47,9 @@ var VideoMCU = function () {
     //该标签用于定义在视频上面显示的文字样式
     var VIDEO_TEXT_DIV_FORMAT = "<div style='font-family:黑体;color:#FFF;position:absolute;top:7%;right:5%'>{0}</div>";
 
+    //该标签用于定义视频上面显示的静音图标
+    var VIDEO_MUTE_IMG = "<input id='{0}'type='image' src='mute_image/Mute_Button_On.png' class='mute_image'/>"
+
     /******************************************************************************************************/
     /*表格布局样式，用于视频分屏*/
     /******************************************************************************************************/
@@ -256,6 +259,10 @@ var VideoMCU = function () {
     </tbody>\
 </table>";
 
+
+    //本地用户的userid
+    var LOCAL_USER_USERID;
+
     function videomcu() {
         //无视频时显示的默认图片全路径
         this.defaultImgPath = "defaultConf.bmp";
@@ -267,6 +274,9 @@ var VideoMCU = function () {
         this.currVideoUsers = [];
         //当前分屏数量
         this.currScreenSplitNum = 0;
+
+        //当前本地用户的userId
+        this.localVideoUserId = "";
 
         /**
          * 获取分屏布局的html
@@ -294,7 +304,7 @@ var VideoMCU = function () {
             var tds = document.getElementById(tableName).getElementsByTagName("TD");
 
             var videoTag;
-            for (i = 0; i < tds.length; i++) {
+            for (var i = 0; i < tds.length; i++) {
                 videoTag = videoTagList[i + 1];
                 if (videoTag != null) {
                     tds[i].innerHTML = videoTagList[i + 1];
@@ -317,7 +327,7 @@ var VideoMCU = function () {
             if(!IsStringEmpty(userInfo.userName)) {
                 videoTag = this.addVideoText(videoTag, userInfo.userName);
             }
-
+            videoTag = this.addMuteImg(videoTag,userInfo.userId);
             var wholeTag = String.format(VIDEO_DIV_FORMAT, "div1_" + userInfo.userId, "div2_" + userInfo.userId, videoTag);
             return wholeTag;
         }
@@ -331,6 +341,18 @@ var VideoMCU = function () {
             var txtDiv = String.format(VIDEO_TEXT_DIV_FORMAT, userName);
             return videoTag + txtDiv;
         }
+
+        /**
+         * 在视频上面添加静音图标
+         * @param
+         *
+         * */
+        this.addMuteImg = function (videoTag, userId){
+            var img = String.format(VIDEO_MUTE_IMG,'mute_img_'+userId);
+            return videoTag + img;
+        }
+
+
 
         /**
          * 将video tag根据videoPostion保存到数组的相应位置。便于后面直接根据数组位置展现视频
@@ -439,6 +461,25 @@ var VideoMCU = function () {
     }
 
     /**
+     *绑定静音事件
+     *
+     * */
+    videomcu.prototype.initMuteVideo = function(){
+
+        $("input[id^='mute_img_']").click(function(){
+            if($(this).attr("src") == "mute_image/Mute_Button_Off.png"){
+                $(this).attr("src","mute_image/Mute_Button_On.png");
+                //alert("静音");
+            }else{
+                $(this).attr("src","mute_image/Mute_Button_Off.png");
+                //alert("发言");
+            }
+        });
+
+    }
+
+
+    /**
      * 初始化视频拖动事件，用于视频拖动交换
      */
     videomcu.prototype.initSwapVideo = function(){
@@ -514,6 +555,10 @@ var VideoMCU = function () {
 
         if (infos.videoContainerId != null && infos.videoContainerId.length > 0) {
             this.videoContainerId = infos.videoContainerId;
+        }
+
+        if(infos.localVideoUserId != null && infos.localVideoUserId.length > 0){
+            this.localVideoUserId = infos.localVideoUserId;
         }
 
         //初始化视频最大时的相关操作
@@ -630,8 +675,9 @@ var VideoMCU = function () {
         if(screenNum == 3){
             console.log("3分屏，需要调整第一屏样式，居中显示");
             $("td:first div").find("div[id^='div2_']").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
-            this.initSwapVideo();
         }
+
+        this.initMuteVideo();
         this.initSwapVideo();
     }
 
