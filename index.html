@@ -30,6 +30,7 @@
     <script type="text/javascript">
         var rtc;
         var mcu = VideoMCU();   //分屏MCU
+        var logManager;
 
         var currRoomNum;//获取参数roomNum
         var userID; //用户id
@@ -42,6 +43,9 @@
             userID = request("userId");
             userName = request("userName");
             defaultShowVideo = request("defaultShowVideo") || "show";
+
+            //初始化日志管理器
+            logManager = new LogManager(userID);
 
             //初始化RTC相关的回调函数
             initRTC();
@@ -240,6 +244,19 @@
 </head>
 <body onload="init();">
 <div id="debugdiv">
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#uploadLog").on('click', function () {
+                if (logManager.isOriginnalConsole) {
+                    logManager.takeOverConsole();
+                    $(this).val("取消上传日志");
+                } else {
+                    logManager.recoverConsole();
+                    $(this).val("上传日志");
+                }
+            })
+        });
+    </script>
     分屏:
     <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
         <option value="1">1分屏</option>
@@ -256,7 +273,7 @@
         <option value="16">16分屏</option>
     </select>
     &nbsp;
-    <input type="button" id="logtofile" value="导出日志" onclick="logToServer();"/>
+    <input type="button" id="uploadLog" value="上传日志"/>
 </div>
 <div id="screenContainer"/>
 </body>
