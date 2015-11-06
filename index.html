@@ -2,49 +2,17 @@
 <head>
     <meta charset="UTF-8">
     <title>MCU Conference</title>
-    <style type="text/css">
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #2E2D2E;
-            overflow: hidden;
-        }
-
-        .mute_image {
-            position: absolute;
-            left: 5%;
-            top: 7%;
-        }
-
-        #debugdiv {
-            position:absolute;
-            display: none;
-            filter:alpha(opacity=50);
-            opacity: 0.5;
-            z-index:10;
-        }
-
-        #blockdebug {
-            position: absolute;
-            bottom: 0;
-            z-index: 10;
-            width: 20px;
-            height: 20px;
-            visibility: visible;
-            filter:alpha(opacity=10);
-            opacity: 0.1;
-
-        }
-    </style>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
     <script type="text/javascript" src="jquery-1.10.2.js"></script>
     <script type="text/javascript" src="jquery-ui-1.10.1.min.js"></script>
     <script type="text/javascript" src="camerainfos.js"></script>
     <script type="text/javascript" src="common.js"></script>
     <script type="text/javascript" src="splitscreen.js"></script>
+    <link href="css/main.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript">
         var rtc;
         var mcu = VideoMCU();   //分屏MCU
+        var logManager;
 
         var currRoomNum;//获取参数roomNum
         var userID; //用户id
@@ -57,6 +25,9 @@
             userID = request("userId");
             userName = request("userName");
             defaultShowVideo = request("defaultShowVideo") || "show";
+
+            //初始化日志管理器
+            logManager = new LogManager(userID);
 
             //初始化RTC相关的回调函数
             initRTC();
@@ -262,6 +233,19 @@
 </head>
 <body onload="init();">
 <div id="debugdiv">
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#uploadLog").on('click', function () {
+                if (logManager.isOriginnalConsole) {
+                    logManager.takeOverConsole();
+                    $(this).val("取消上传日志");
+                } else {
+                    logManager.recoverConsole();
+                    $(this).val("上传日志");
+                }
+            })
+        });
+    </script>
     分屏:
     <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
         <option value="1">1分屏</option>
@@ -278,7 +262,7 @@
         <option value="16">16分屏</option>
     </select>
     &nbsp;
-    <input type="button" id="logtofile" value="导出日志" onclick="logToServer();"/>
+    <input type="button" id="uploadLog" value="上传日志"/>
 </div>
 <div id="screenContainer"></div>
 <input type="button" id="blockdebug" />

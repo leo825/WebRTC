@@ -4,7 +4,7 @@ var server = require('http').createServer(app);
 var SkyRTC = require('skyrtc').listen(server);
 var path = require("path");
 
-var queryString = require('querystring');
+var queryString = require('querystring');   //用于解析post请求参数
 var fs = require('fs');
 
 var logPath =  __dirname + "/logs";
@@ -36,16 +36,10 @@ app.get('/getloglist',function(req,res){
 });
 
 //用于日志文件上传，根据用户id保存到不同的日志文件中
-app.post('/uploadlog',function(req,res){
-	console.log("接收到日志上传请求");
-    var postData = "";
-	req.on('data',function(postdt){
-        postData += postdt;
-    })
-    req.on('end', function () {
-        var pd = queryString.parse(postData);
-        fs.writeFile(logPath + "/" + pd.userId + ".log", pd.logData);
-    })
+app.get('/uploadlog',function(req,res){
+	//console.log(req.query.userId + ":" + req.query.logData);
+    fs.appendFile(logPath + "/" + req.query.userId + ".log", req.query.logData + "\n");
+    res.send("ok");
 });
 
 app.get('/downloadlog',function(req,res){
