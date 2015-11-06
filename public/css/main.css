@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #2E2D2E;
+    overflow: hidden;
+}
+
+.mute_image {
+    position: absolute;
+    left: 5%;
+    top: 7%;
+}
+
+#debugdiv {
+    background-color: #f4ffef;
+    display: none; /* dislplay: block */
+}
