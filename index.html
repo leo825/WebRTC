@@ -7,22 +7,28 @@
             margin: 0;
             padding: 0;
             background-color: #2E2D2E;
-            overflow:hidden;
+            overflow: hidden;
         }
-        .mute_image{position:absolute; left:5%; top:7%;}
 
-        #debugdiv{
-           display: none;
+        .mute_image {
+            position: absolute;
+            left: 5%;
+            top: 7%;
+        }
+
+        #debugdiv {
+            background-color: #f4ffef;
+            display: block; /* dislplay: none */
         }
     </style>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
     <script type="text/javascript" src="jquery-1.10.2.js"></script>
-    <script src="jquery-ui-1.10.1.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="jquery-ui-1.10.1.min.js"></script>
     <script type="text/javascript" src="camerainfos.js"></script>
-    <script type="text/javascript" src="move.js"></script>
+    <script type="text/javascript" src="common.js"></script>
     <script type="text/javascript" src="splitscreen.js"></script>
     <script type="text/javascript">
-        var  rtc;
+        var rtc;
         var mcu = VideoMCU();   //分屏MCU
 
         var currRoomNum;//获取参数roomNum
@@ -48,30 +54,30 @@
 
             var videoName = request("videoName");
             //去除字符串中的双引号
-            videoName = videoName.replace(/\"/g,"");
+            videoName = videoName.replace(/\"/g, "");
 
             //获取摄像头列表，并在获取后进行初始化
-            initAndGetCameraInfos(function(videoInfos){
+            initAndGetCameraInfos(function (videoInfos) {
                 //如果url中未指定摄像头，则自己指定
-                if(videoName == null || videoName.length==0){
+                if (videoName == null || videoName.length == 0) {
                     //获取摄像头列表的第一个摄像头，作为默认摄像头
                     currVideoId = getFreeCamId();
-                }else{  //如果已指定，则需要根据名称获取摄像头id
+                } else {  //如果已指定，则需要根据名称获取摄像头id
                     currVideoId = getCameraIdByName(videoName);
                 }
 
-                if(currVideoId==null || currVideoId.length==0){
+                if (currVideoId == null || currVideoId.length == 0) {
                     console.log("MCU初始化失败，因未获取到有效的摄像头");
                     return;
                 }
 
-                if(currRoomNum!=null && currRoomNum.length>0){
+                if (currRoomNum != null && currRoomNum.length > 0) {
                     join(currRoomNum);
                 }
             });
         }
 
-        function initRTC(){
+        function initRTC() {
             rtc = SkyRTC();
 
             //成功创建WebSocket连接
@@ -110,7 +116,7 @@
             //创建本地视频流成功
             rtc.on("stream_created", function (stream) {
                 var myVideoUrl = URL.createObjectURL(stream);
-                var user1 = {"userId": userID, "userName":userName, "videoPosition": 1, "videoURL": myVideoUrl};
+                var user1 = {"userId": userID, "userName": userName, "videoPosition": 1, "videoURL": myVideoUrl};
                 mcu.SplitVideoScreen(1, [user1]);
             });
 
@@ -122,32 +128,32 @@
             //接收到其他用户的视频流
             rtc.on('pc_add_stream', function (stream, socketId) {
                 var peerInfo = rtc.getUserInfoBySocketId(socketId);
-                    if(peerInfo != null && !IsStringEmpty(peerInfo.userId)){
+                if (peerInfo != null && !IsStringEmpty(peerInfo.userId)) {
                         console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
-                        var myVideoUrl = URL.createObjectURL(stream);
-                        var user = {"userId": peerInfo.userId, "userName":peerInfo.userName, "videoURL": myVideoUrl};
-                        mcu.addUserVideo(user);
+                    var myVideoUrl = URL.createObjectURL(stream);
+                    var user = {"userId": peerInfo.userId, "userName": peerInfo.userName, "videoURL": myVideoUrl};
+                    mcu.addUserVideo(user);
 
-                    if(Object.keys(rtc.peerConnections).length >= 1){
+                    if (Object.keys(rtc.peerConnections).length >= 1) {
                         //alert("调用  bound.jSVideoNum");
                         console.log("开始调用bound.JSVideoNum...")
                         try {
                             bound.jSVideoNum("'2'", '');
-                        }catch(error){
+                        } catch (error) {
                             console.log("在调用bound.jsVideoNum时出错 + " + error);
                         }
                     }
-                }else{
+                } else {
                     console.warn("pc_add_stream, 增加新用户失败，因参数不全", peerInfo);
                 }
             });
 
             //删除其他用户
             rtc.on('remove_peer', function (userId) {
-                if(!IsStringEmpty(userId)){
+                if (!IsStringEmpty(userId)) {
                     console.log("开始从视频列表中删除用户"+ userId);
                     mcu.removeUserVideo(userId);
-                }else{
+                } else {
                     console.warn("remove_peer, 删除用户失败，因参数不全", userId);
                 }
             });
@@ -166,9 +172,9 @@
         }
 
         //切换摄像头，参数为摄像头名称
-        function switchCamera(camName){
+        function switchCamera(camName) {
             var camId = getCameraIdByName(camName);
-            if(camId == null || camId.length==0){
+            if (camId == null || camId.length == 0) {
                 console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");
                 return;
             }
@@ -176,13 +182,13 @@
             //如果会议已停止，则不加载摄像头
             if (!rtc.isLive()) {
                 console.log("当前未参加会议，不必重新加入会议");
-            }else{
+            } else {
                 var roomNum = currRoomNum;
                 unjoin();
 
                 currVideoId = camId;
                 currRoomNum = roomNum;
-                setTimeout("join(\"" + roomNum +"\")", parseInt(1200 * Math.random()));
+                setTimeout("join(\"" + roomNum + "\")", parseInt(1200 * Math.random()));
             }
         }
 
@@ -205,7 +211,7 @@
             }
 
             //如果没有摄像头，需要再次指定（在不刷新页面的情况下，多次join会出现摄像头错乱，所以重新指定比较好）
-            if(currVideoId == null){
+            if (currVideoId == null) {
                 currVideoId = getFreeCamId();
             }
 
@@ -217,9 +223,9 @@
         function unjoin() {
             currVideoId = null;
             currRoomNum = null;
-            if(rtc.isLive()){
+            if (rtc.isLive()) {
                 rtc.unConnect();
-            }else{
+            } else {
                 console.log("rtc连接已处于关闭状态，不需要再次关闭");
             }
         }
@@ -234,18 +240,23 @@
 </head>
 <body onload="init();">
 <div id="debugdiv">
-    <button id="split1" onclick="divScreen(1);">1分屏</button>
-    <button id="split2" onclick="divScreen(2);">2分屏</button>
-    <button id="split3" onclick="divScreen(3);">3分屏</button>
-    <button id="split4" onclick="divScreen(4);">4分屏</button>
-    <button id="split5" onclick="divScreen(5);">5分屏</button>
-    <button id="split6" onclick="divScreen(6);">6分屏</button>
-    <button id="split7" onclick="divScreen(7);">7分屏</button>
-    <button id="split8" onclick="divScreen(8);">8分屏</button>
-    <button id="split9" onclick="divScreen(9);">9分屏</button>
-    <button id="split10" onclick="divScreen(10);">10分屏</button>
-    <button id="split13" onclick="divScreen(13);">13分屏</button>
-    <button id="split16" onclick="divScreen(16);">16分屏</button>
+    分屏:
+    <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
+        <option value="1">1分屏</option>
+        <option value="2">2分屏</option>
+        <option value="3">3分屏</option>
+        <option value="4">4分屏</option>
+        <option value="5">5分屏</option>
+        <option value="6">6分屏</option>
+        <option value="7">7分屏</option>
+        <option value="8">8分屏</option>
+        <option value="9">9分屏</option>
+        <option value="10">10分屏</option>
+        <option value="13">13分屏</option>
+        <option value="16">16分屏</option>
+    </select>
+    &nbsp;
+    <input type="button" id="logtofile" value="导出日志" onclick="logToServer();"/>
 </div>
 <div id="screenContainer"/>
 </body>
