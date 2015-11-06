@@ -17,8 +17,23 @@
         }
 
         #debugdiv {
-            background-color: #f4ffef;
-            display: block; /* dislplay: none */
+            position:absolute;
+            display: none;
+            filter:alpha(opacity=50);
+            opacity: 0.5;
+            z-index:10;
+        }
+
+        #blockdebug {
+            position: absolute;
+            bottom: 0;
+            z-index: 10;
+            width: 20px;
+            height: 20px;
+            visibility: visible;
+            filter:alpha(opacity=10);
+            opacity: 0.1;
+
         }
     </style>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
@@ -236,6 +251,13 @@
             mcu.SplitVideoScreen(num);
         }
 
+        //点击显示或者隐藏debugdiv
+
+        window.onload=function(){
+            $("#blockdebug").on("click",function(){
+               $("#debugdiv").slideToggle();
+            });
+        };
     </script>
 </head>
 <body onload="init();">
@@ -258,6 +280,7 @@
     &nbsp;
     <input type="button" id="logtofile" value="导出日志" onclick="logToServer();"/>
 </div>
-<div id="screenContainer"/>
+<div id="screenContainer"></div>
+<input type="button" id="blockdebug" />
 </body>
 </html>
