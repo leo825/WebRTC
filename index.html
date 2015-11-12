@@ -2,13 +2,13 @@
 <head>
     <meta charset="UTF-8">
     <title>MCU Conference</title>
-    <link type="text/css" href="css/main.css" rel="stylesheet"/>
     <script type="text/javascript" src="SkyRTC-client.js"></script>
     <script type="text/javascript" src="jquery-1.10.2.js"></script>
     <script type="text/javascript" src="jquery-ui-1.10.1.min.js"></script>
     <script type="text/javascript" src="camerainfos.js"></script>
     <script type="text/javascript" src="common.js"></script>
     <script type="text/javascript" src="splitscreen.js"></script>
+    <link href="css/main.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript">
         var rtc;
         var mcu = VideoMCU();   //分屏MCU
@@ -224,6 +224,13 @@
             mcu.SplitVideoScreen(num);
         }
 
+        //点击显示或者隐藏debugdiv
+
+        window.onload=function(){
+            $("#blockdebug").on("click",function(){
+               $("#debugdiv").slideToggle();
+            });
+        };
     </script>
 </head>
 <body onload="init();">
@@ -273,6 +280,7 @@
     &nbsp;
     <input type="button" id="uploadLog" value="上传日志"/>
 </div>
-<div id="screenContainer"/>
+<div id="screenContainer"></div>
+<input type="button" id="blockdebug" />
 </body>
 </html>

@@ -1,17 +1,32 @@
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #2E2D2E;
-    overflow: hidden;
-}
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2E2D2E;
+            overflow: hidden;
+        }
 
-.mute_image {
-    position: absolute;
-    left: 5%;
-    top: 7%;
-}
+        .mute_image {
+            position: absolute;
+            left: 5%;
+            top: 7%;
+        }
 
-#debugdiv {
-    background-color: #f4ffef;
-    display: none; /* dislplay: block */
-}
+        #debugdiv {
+            position:absolute;
+            display: none;
+            filter:alpha(opacity=50);
+            opacity: 0.5;
+            z-index:10;
+        }
+
+        #blockdebug {
+            position: absolute;
+            bottom: 0;
+            z-index: 10;
+            width: 20px;
+            height: 20px;
+            visibility: visible;
+            filter:alpha(opacity=10);
+            opacity: 0.1;
+
+        }
