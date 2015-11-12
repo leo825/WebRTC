@@ -60,6 +60,8 @@
                 if (currRoomNum != null && currRoomNum.length > 0) {
                     join(currRoomNum);
                 }
+
+                initDebug(); //初始化调试按钮信息
             });
         }
 
@@ -227,7 +229,8 @@
 <body onload="init();">
 <div id="debugdiv">
     <script type="text/javascript">
-        $(document).ready(function() {
+        function initDebug(){
+            //初始化日志上传按钮点击事件
             $("#uploadLog").on('click', function () {
                 if (logManager.isOriginnalConsole) {
                     logManager.takeOverConsole();
@@ -236,8 +239,18 @@
                     logManager.recoverConsole();
                     $(this).val("上传日志");
                 }
-            })
-        });
+            });
+
+            //初始化切换摄像头下拉列表
+            var camIdNameMap = getCameraInfos();
+            for(var cid in camIdNameMap){
+                $("#switchcameraddl").append("<option value='"+cid+"'>"+camIdNameMap[cid]+"</option>");
+            }
+
+            $("#switchcameraddl").change(function(){
+               switchCamera($(this).find("option:selected").text());
+            });
+        }
     </script>
     分屏:
     <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
@@ -254,6 +267,9 @@
         <option value="13">13分屏</option>
         <option value="16">16分屏</option>
     </select>
+    &nbsp;
+    切换摄像头
+    <select id="switchcameraddl" name="切换摄像头"></select>
     &nbsp;
     <input type="button" id="uploadLog" value="上传日志"/>
 </div>
