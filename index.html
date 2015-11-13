@@ -150,8 +150,9 @@
             if (!IsStringEmpty(currRoomNum)) {
                 //连接WebSocket服务器
                 var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+                console.log("开始连接 WebSocket服务器:" + wsUrl, currRoomNum, userID, userName);
                 rtc.connect(wsUrl, currRoomNum, userID, userName);
-                console.log("连接 WebSocket服务器:" + wsUrl, currRoomNum);
+                console.log("连接 WebSocket服务器结束.");
             } else {
                 console.log("因参数中会议号为空，暂时不初始化websocket连接");
             }
@@ -222,18 +223,7 @@
             mcu.SplitVideoScreen(num);
         }
 
-        //点击显示或者隐藏debugdiv
-
-        window.onload=function(){
-            $("#blockdebug").on("click",function(){
-               $("#debugdiv").slideToggle();
-            });
-        };
-    </script>
-</head>
-<body onload="init();">
-<div id="debugdiv">
-    <script type="text/javascript">
+        //页面加载完成之后绑定jquery事件
         $(document).ready(function() {
             $("#uploadLog").on('click', function () {
                 if (logManager.isOriginnalConsole) {
@@ -244,8 +234,37 @@
                     $(this).val("上传日志");
                 }
             })
+
+            //点击显示或者隐藏debugdiv
+            $("#blockdebug").on("click",function(){
+                $("#debugdiv").slideToggle();
+                showLog(console);
+            });
         });
+
+
+        //测试
+        function showLog(console){
+            alert("showLog");
+            var filename = "E:/test.log";
+            console.save = function(data,filename){
+                if(!data){
+                    console.error('Console.save: No data')
+                    return;
+                }
+                if(!filename) {
+                    filename = 'newlog.log';
+                }
+
+            };
+        }
+
+
+
     </script>
+</head>
+<body onload="init();">
+<div id="debugdiv">
     分屏:
     <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
         <option value="1">1分屏</option>
