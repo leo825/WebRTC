@@ -115,6 +115,7 @@
 
             //接收到其他用户的视频流
             rtc.on('pc_add_stream', function (stream, socketId) {
+                console.log("收到其他用户视频流,sockerId:" + socketId);
                 var peerInfo = rtc.getUserInfoBySocketId(socketId);
                 if (peerInfo != null && !IsStringEmpty(peerInfo.userId)) {
                         console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
@@ -138,6 +139,7 @@
 
             //删除其他用户
             rtc.on('remove_peer', function (userId) {
+                console.log("有用户退出，用户id：" + userId);
                 if (!IsStringEmpty(userId)) {
                     console.log("开始从视频列表中删除用户"+ userId);
                     mcu.removeUserVideo(userId);
@@ -149,6 +151,7 @@
 
         //连接WebSocket视频控制中心
         function connectWSServer() {
+            console.log("开始连接WebSocket");
             if (!IsStringEmpty(currRoomNum)) {
                 //连接WebSocket服务器
                 var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
@@ -161,6 +164,7 @@
 
         //切换摄像头，参数为摄像头名称
         function switchCamera(camName) {
+            console.log("开始切换摄像头，camName:" + camName)
             var camId = getCameraIdByName(camName);
             if (camId == null || camId.length == 0) {
                 console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");
@@ -188,6 +192,7 @@
 
         //加入会议室
         function join(roomid) {
+            console.log("开始加入会议室,roomId:" + roomid);
             if (roomid == null || roomid.length == 0) {
                 console.log("roomid为空，加入会议失败");
                 return;
@@ -209,6 +214,7 @@
 
         //退出会议室，并断开WebSocket连接
         function unjoin() {
+            console.log("开始断开会议室, roomId:" + currRoomNum);
             currVideoId = null;
             currRoomNum = null;
             if (rtc.isLive()) {
@@ -220,17 +226,11 @@
 
         //按数字分屏
         function divScreen(num) {
+            console.log("开始分屏，num:" + num);
             num = parseInt(num);
             mcu.SplitVideoScreen(num);
         }
 
-        //点击显示或者隐藏debugdiv
-
-        window.onload=function(){
-            $("#blockdebug").on("click",function(){
-               $("#debugdiv").slideToggle();
-            });
-        };
     </script>
 </head>
 <body onload="init();">
@@ -256,6 +256,10 @@
 
             $("#switchcameraddl").change(function(){
                switchCamera($(this).find("option:selected").text());
+            });
+
+            $("#blockdebug").on("click",function(){
+                $("#debugdiv").slideToggle();
             });
         }
     </script>
