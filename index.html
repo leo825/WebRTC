@@ -118,14 +118,14 @@
                 console.log("收到其他用户视频流,sockerId:" + socketId);
                 var peerInfo = rtc.getUserInfoBySocketId(socketId);
                 if (peerInfo != null && !IsStringEmpty(peerInfo.userId)) {
-                        console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
+                        console.log("开始将用户"+peerInfo.userName+"加入到视频列表中");
                     var myVideoUrl = URL.createObjectURL(stream);
                     var user = {"userId": peerInfo.userId, "userName": peerInfo.userName, "videoURL": myVideoUrl};
                     mcu.addUserVideo(user);
 
                     if (Object.keys(rtc.peerConnections).length >= 1) {
                         //alert("调用  bound.jSVideoNum");
-                        console.log("开始调用bound.JSVideoNum...")
+                        console.log("开始调用bound.JSVideoNum...");
                         try {
                             bound.jSVideoNum("'2'", '');
                         } catch (error) {
@@ -164,7 +164,7 @@
 
         //切换摄像头，参数为摄像头名称
         function switchCamera(camName) {
-            console.log("开始切换摄像头，camName:" + camName)
+            console.log("开始切换摄像头，camName:" + camName);
             var camId = getCameraIdByName(camName);
             if (camId == null || camId.length == 0) {
                 console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");

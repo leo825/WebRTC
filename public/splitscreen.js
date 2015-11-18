@@ -479,7 +479,7 @@ var VideoMCU = function () {
     }
 
     /**
-     * 根据div1_元素获取元素的位置
+     * 根据div1_元素获取元素的位置并且交换两个元素的位置
      *
      * */
 
@@ -492,18 +492,26 @@ var VideoMCU = function () {
         var ele2_start = ele2_div1_id.indexOf("_");
         var ele2_userId = ele2_div1_id.substr(ele2_start+1,ele2_div1_id.length);//获取被覆盖元素2的id
         var ele2_position = 0;
+        var ele_obj1;
+        var ele_obj2;
         // 此处是为了获取元素的位置
         for(var i=0;i<this.currVideoUsers.length;i++){
             if(this.currVideoUsers[i].userId == ele1_userId){
-               ele1_position = this.currVideoUsers[i].videoPosition;
+                ele1_position = this.currVideoUsers[i].videoPosition;
+                ele_obj1 = this.currVideoUsers[i];
+
             }
             if(this.currVideoUsers[i].userId == ele2_userId){
                 ele2_position = this.currVideoUsers[i].videoPosition;
+                ele_obj2 = this.currVideoUsers[i];
             }
         }
         console.log("此处获取到ele1_position"+ele1_position+", ele2_position"+ele1_position);
 
         //此处是为了交换元素的位置
+        ele_obj1.videoPosition = ele2_position;
+        ele_obj2.videoPosition = ele1_position;
+    /*
         for(var j=0;j<this.currVideoUsers.length;j++){
             if(this.currVideoUsers[j].userId == ele1_userId){
                 this.currVideoUsers[j].videoPosition = ele2_position;
@@ -512,7 +520,7 @@ var VideoMCU = function () {
                 this.currVideoUsers[j].videoPosition = ele1_position;
             }
         }
-
+*/
     }
 
 
