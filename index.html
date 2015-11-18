@@ -60,6 +60,8 @@
                 if (currRoomNum != null && currRoomNum.length > 0) {
                     join(currRoomNum);
                 }
+
+                initDebug(); //初始化调试按钮信息
             });
         }
 
@@ -113,6 +115,7 @@
 
             //接收到其他用户的视频流
             rtc.on('pc_add_stream', function (stream, socketId) {
+                console.log("收到其他用户视频流,sockerId:" + socketId);
                 var peerInfo = rtc.getUserInfoBySocketId(socketId);
                 if (peerInfo != null && !IsStringEmpty(peerInfo.userId)) {
                         console.log("开始将用户"+peerInfo.userName+"加入到视频列表中")
@@ -136,6 +139,7 @@
 
             //删除其他用户
             rtc.on('remove_peer', function (userId) {
+                console.log("有用户退出，用户id：" + userId);
                 if (!IsStringEmpty(userId)) {
                     console.log("开始从视频列表中删除用户"+ userId);
                     mcu.removeUserVideo(userId);
@@ -147,12 +151,12 @@
 
         //连接WebSocket视频控制中心
         function connectWSServer() {
+            console.log("开始连接WebSocket");
             if (!IsStringEmpty(currRoomNum)) {
                 //连接WebSocket服务器
                 var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
-                console.log("开始连接 WebSocket服务器:" + wsUrl, currRoomNum, userID, userName);
                 rtc.connect(wsUrl, currRoomNum, userID, userName);
-                console.log("连接 WebSocket服务器结束.");
+                console.log("连接 WebSocket服务器:" + wsUrl, currRoomNum);
             } else {
                 console.log("因参数中会议号为空，暂时不初始化websocket连接");
             }
@@ -160,6 +164,7 @@
 
         //切换摄像头，参数为摄像头名称
         function switchCamera(camName) {
+            console.log("开始切换摄像头，camName:" + camName)
             var camId = getCameraIdByName(camName);
             if (camId == null || camId.length == 0) {
                 console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");
@@ -187,6 +192,7 @@
 
         //加入会议室
         function join(roomid) {
+            console.log("开始加入会议室,roomId:" + roomid);
             if (roomid == null || roomid.length == 0) {
                 console.log("roomid为空，加入会议失败");
                 return;
@@ -208,6 +214,7 @@
 
         //退出会议室，并断开WebSocket连接
         function unjoin() {
+            console.log("开始断开会议室, roomId:" + currRoomNum);
             currVideoId = null;
             currRoomNum = null;
             if (rtc.isLive()) {
@@ -219,12 +226,18 @@
 
         //按数字分屏
         function divScreen(num) {
+            console.log("开始分屏，num:" + num);
             num = parseInt(num);
             mcu.SplitVideoScreen(num);
         }
 
-        //页面加载完成之后绑定jquery事件
-        $(document).ready(function() {
+    </script>
+</head>
+<body onload="init();">
+<div id="debugdiv">
+    <script type="text/javascript">
+        function initDebug(){
+            //初始化日志上传按钮点击事件
             $("#uploadLog").on('click', function () {
                 if (logManager.isOriginnalConsole) {
                     logManager.takeOverConsole();
@@ -233,38 +246,23 @@
                     logManager.recoverConsole();
                     $(this).val("上传日志");
                 }
-            })
+            });
 
-            //点击显示或者隐藏debugdiv
+            //初始化切换摄像头下拉列表
+            var camIdNameMap = getCameraInfos();
+            for(var cid in camIdNameMap){
+                $("#switchcameraddl").append("<option value='"+cid+"'>"+camIdNameMap[cid]+"</option>");
+            }
+
+            $("#switchcameraddl").change(function(){
+               switchCamera($(this).find("option:selected").text());
+            });
+
             $("#blockdebug").on("click",function(){
                 $("#debugdiv").slideToggle();
-                showLog(console);
             });
-        });
-
-
-        //测试
-        function showLog(console){
-            alert("showLog");
-            var filename = "E:/test.log";
-            console.save = function(data,filename){
-                if(!data){
-                    console.error('Console.save: No data')
-                    return;
-                }
-                if(!filename) {
-                    filename = 'newlog.log';
-                }
-
-            };
         }
-
-
-
     </script>
-</head>
-<body onload="init();">
-<div id="debugdiv">
     分屏:
     <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
         <option value="1">1分屏</option>
@@ -280,6 +278,9 @@
         <option value="13">13分屏</option>
         <option value="16">16分屏</option>
     </select>
+    &nbsp;
+    切换摄像头
+    <select id="switchcameraddl" name="切换摄像头"></select>
     &nbsp;
     <input type="button" id="uploadLog" value="上传日志"/>
 </div>
