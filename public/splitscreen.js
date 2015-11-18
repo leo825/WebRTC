@@ -574,7 +574,7 @@ var VideoMCU = function () {
     }
 
     /**
-     * 增加新的视频用户
+     * 增加新的视频用户,如果用户已经在视频中存在，则更新相关的信息
      * @param userInfo  用户视频相关信息，如userId、userName、videoURL、videoPostion、videoParam等
      */
     videomcu.prototype.addUserVideo = function(userInfo){

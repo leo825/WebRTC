@@ -286,9 +286,35 @@ var SkyRTC = function() {
 
     /*************************流处理部分*******************************/
 
+    //切换摄像头
+    skyrtc.prototype.switchStream = function(options){
+        //从PeerConnection移除当前的流，并关闭
+        for (var connection in this.peerConnections) {
+            this.peerConnections[connection].removeStream(this.localMediaStream);
+        }
+        this.localMediaStream.stop();
+
+        var that = this;
+        that.createStream(options, function(){
+            that.addStreams();
+            that.addDataChannels();
+            that.sendOffers();
+        });
+    }
+
+    //加载摄像头并初始化
+    skyrtc.prototype.createStreamAndInit = function(options){
+        var that = this;
+        that.createStream(options, function(){
+            that.createPeerConnections();
+            that.addStreams();
+            that.addDataChannels();
+            that.sendOffers();
+        });
+    }
 
     //创建本地流
-    skyrtc.prototype.createStream = function(options) {
+    skyrtc.prototype.createStream = function(options, handler) {
         var that = this;
         console.log("开始创建本地流", options);
         if (getUserMedia) {
@@ -299,7 +325,7 @@ var SkyRTC = function() {
                     that.initializedStreams++;
                     that.emit("stream_created", stream);
                     if (that.initializedStreams === that.numStreams) {
-                        that.emit("ready");
+                        handler(stream);
                     }
                 },
                 function(error) {

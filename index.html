@@ -20,6 +20,8 @@
         var defaultShowVideo; //默认是否显示视频
         var currVideoId; //当前正在使用的摄像头id
 
+        var isAudioOn = false; //是否开启麦克风, 默认关闭
+
         function init() {
             currRoomNum = request("roomNum");
             userID = request("userId");
@@ -72,23 +74,17 @@
             rtc.on("socket_connected", function (socket) {
                 var audio = request("audio");
                 var speaker = request("speaker");
-                audio = getParams(audio);
+                isAudioOn = getParams(audio);
                 speaker = getParams(speaker);
-                console.info("音频状态是:" + audio + ", speaker:" + speaker);
-                console.info("创建WebSocket的时候audio=" + audio);
+                console.info("音频状态是:" + isAudioOn + ", speaker:" + speaker);
+                console.info("创建WebSocket的时候audio=" + isAudioOn);
                 //创建本地视频流
                 if (currVideoId == "" || currVideoId == undefined) {
                     console.log("摄像头未指定，使用默认摄像头来进行rtc.createStream");
                     currVideoId = null;
                 }
 
-                rtc.createStream({//设置分辨率是320*180//684,513//640*480
-                    video: {
-                        mandatory: {"maxWidth": "1920", "maxHeight": "1080"},
-                        "optional": [{"sourceId": currVideoId}, {"frameRate": 60}, {"aspectRatio": 16 / 9}]
-                    },
-                    audio: audio
-                });
+                rtc.createStreamAndInit(getMediaOptions(currVideoId, isAudioOn));
             });
 
             //断开WebSocket连接
@@ -105,7 +101,13 @@
             rtc.on("stream_created", function (stream) {
                 var myVideoUrl = URL.createObjectURL(stream);
                 var user1 = {"userId": userID, "userName": userName, "videoPosition": 1, "videoURL": myVideoUrl};
-                mcu.SplitVideoScreen(1, [user1]);
+
+                //页面第一次加载，创建本地视频成功后，直接进行1分屏
+                if(mcu.currVideoUsers.length == 0) {
+                    mcu.SplitVideoScreen(1, [user1]);
+                }else{  // 切换摄像头成功后，将本地用户新的视频地址更新到MCU中
+                    mcu.addUserVideo(user1);
+                }
             });
 
             //创建本地视频流失败
@@ -149,6 +151,17 @@
             });
         }
 
+        //获取媒体相关属性，用于加载摄像头和麦克风
+        function getMediaOptions(videoId, isAudioOn){
+            return {
+                video: {
+                    mandatory: {"maxWidth": "1920", "maxHeight": "1080"},
+                    "optional": [{"sourceId": videoId}, {"frameRate": 60}, {"aspectRatio": 16 / 9}]
+                },
+                audio: isAudioOn
+            };
+        }
+
         //连接WebSocket视频控制中心
         function connectWSServer() {
             console.log("开始连接WebSocket");
@@ -166,22 +179,7 @@
         function switchCamera(camName) {
             console.log("开始切换摄像头，camName:" + camName)
             var camId = getCameraIdByName(camName);
-            if (camId == null || camId.length == 0) {
-                console.log("切换摄像头失败，非法的摄像头名称,{" + camName + "}");
-                return;
-            }
-
-            //如果会议已停止，则不加载摄像头
-            if (!rtc.isLive()) {
-                console.log("当前未参加会议，不必重新加入会议");
-            } else {
-                var roomNum = currRoomNum;
-                unjoin();
-
-                currVideoId = camId;
-                currRoomNum = roomNum;
-                setTimeout("join(\"" + roomNum + "\")", parseInt(1200 * Math.random()));
-            }
+            rtc.switchStream(getMediaOptions(camId, isAudioOn));
         }
 
         //获取视频数量
