@@ -21,6 +21,7 @@
         var currVideoId; //当前正在使用的摄像头id
 
         var isAudioOn = false; //是否开启麦克风, 默认关闭
+        var videoUsers = []; //用于分屏的用户信息
 
         function init() {
             currRoomNum = request("roomNum");
@@ -106,7 +107,7 @@
                 if(mcu.currVideoUsers.length == 0) {
                     mcu.SplitVideoScreen(1, [user1]);
                 }else{  // 切换摄像头成功后，将本地用户新的视频地址更新到MCU中
-                    mcu.addUserVideo(user1);
+                    mcu.updateUserVideo(user1);
                 }
             });
 
@@ -117,25 +118,39 @@
 
             //接收到其他用户的视频流
             rtc.on('pc_add_stream', function (stream, socketId) {
-                console.log("收到其他用户视频流,sockerId:" + socketId);
                 var peerInfo = rtc.getUserInfoBySocketId(socketId);
-                if (peerInfo != null && !IsStringEmpty(peerInfo.userId)) {
-                        console.log("开始将用户"+peerInfo.userName+"加入到视频列表中");
-                    var myVideoUrl = URL.createObjectURL(stream);
-                    var user = {"userId": peerInfo.userId, "userName": peerInfo.userName, "videoURL": myVideoUrl};
-                    mcu.addUserVideo(user);
-
-                    if (Object.keys(rtc.peerConnections).length >= 1) {
-                        //alert("调用  bound.jSVideoNum");
-                        console.log("开始调用bound.JSVideoNum...");
-                        try {
-                            bound.jSVideoNum("'2'", '');
-                        } catch (error) {
-                            console.log("在调用bound.jsVideoNum时出错 + " + error);
-                        }
-                    }
-                } else {
+                console.log("pc_add_stream,收到用户视频流,userId:" + peerInfo.userName);
+                if (peerInfo == null || IsStringEmpty(peerInfo.userId)) {
                     console.warn("pc_add_stream, 增加新用户失败，因参数不全", peerInfo);
+                    return;
+                }
+
+                var myVideoUrl = URL.createObjectURL(stream);
+                var user = {"userId": peerInfo.userId, "userName": peerInfo.userName, "videoURL": myVideoUrl};
+
+                //如果用户已经在MCU中存在，则直接更新即可（在客户端切换摄像头的时候，其他用户会触发下面的代码）
+                if(mcu.isUserExists(peerInfo.userId)){
+                    console.log("用户已存在于MCU中，直接更新该用户");
+                    mcu.updateUserVideo(user);
+                    return;
+                }
+
+                console.log("开始将用户" + peerInfo.userName + "存储到videoUsers中");
+                videoUsers.push(user);
+                if (rtc.isPeerConnectionsReady()) {
+                    console.log("所有用户的视频都已准备好，可以开始分屏");
+                    if (videoUsers.length >= 1) {
+                        console.log("将用户加入到MCU中，用户为", videoUsers);
+                        mcu.addUserVideo(videoUsers);
+                        videoUsers = [];
+                    }
+
+                    console.log("开始调用bound.JSVideoNum...");
+                    try {
+                        bound.jSVideoNum("'2'", '');
+                    } catch (error) {
+                        console.log("在调用bound.jsVideoNum时出错 + " + error);
+                    }
                 }
             });
 

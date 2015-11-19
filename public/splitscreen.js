@@ -630,24 +630,16 @@ var VideoMCU = function () {
 
     /**
      * 增加新的视频用户,如果用户已经在视频中存在，则更新相关的信息
-     * @param userInfo  用户视频相关信息，如userId、userName、videoURL、videoPostion、videoParam等
+     * @param userInfos  用户信息数组，用于保存用户视频相关信息，如userId、userName、videoURL、videoPostion、videoParam等
      */
-    videomcu.prototype.addUserVideo = function(userInfo){
-        console.log("开始增加视频用户", userInfo);
-        var userId = userInfo.userId;
-        if(IsStringEmpty(userId) || IsStringEmpty(userInfo.videoURL)){
-            console.warn("增加视频用户失败，因参数不合法", userInfo);
+    videomcu.prototype.addUserVideo = function(userInfos){
+        console.log("开始增加视频用户", userInfos);
+        if(userInfos==null || userInfos.length==0){
+            console.warn("增加视频用户失败，因参数不合法", userInfos);
             return;
         }
 
-        //如果用于已存在，则进入更新流程
-        if(this.isUserExists(userId)){
-            console.log("用户已存在于原有的会议室中，直接更新即可");
-            this.updateUserVideo(userInfo);
-            return;
-        }
-
-        this.currVideoUsers.push(userInfo);
+        this.currVideoUsers = this.currVideoUsers.concat(userInfos);
         //对视频用户进行重新编号
         this.currVideoUsers = this.reIndexUsers(this.currVideoUsers);
 

@@ -95,6 +95,22 @@ var SkyRTC = function() {
     //继承自事件处理器，提供绑定事件和触发事件的功能
     skyrtc.prototype = new EventEmitter();
 
+    //判断当前所有的PeerConnection的媒体流是否都准备好了
+    //准备好了就可以进行分屏等后续处理
+    skyrtc.prototype.isPeerConnectionsReady = function(){
+        var result = true;
+        var pc;
+        for (var i = 0; i < this.connections.length; i++) {
+            pc = this.peerConnections[this.connections[i]];
+            if(!pc.isStreamAdded){
+                result = false;
+                break;
+            }
+        }
+
+        return result;
+    }
+
     //根据socket id返回用户id及用户姓名
     skyrtc.prototype.getUserInfoBySocketId = function(socketId){
         if(socketId in this.peerUserIds){
@@ -448,6 +464,7 @@ var SkyRTC = function() {
         };
 
         pc.onaddstream = function(evt) {
+            pc.isStreamAdded = true;
             console.log("添加流到peerConnection, " + socketId)
             that.emit('pc_add_stream', evt.stream, socketId, pc);
         };
