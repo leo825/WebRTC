@@ -479,48 +479,33 @@ var VideoMCU = function () {
     }
 
     /**
-     * 根据div1_元素获取元素的位置并且交换两个元素的位置
+     * 根据div1_元素分别获取用户id，然后交换用户视频的videoPostion
      *
      * */
 
-    videomcu.prototype.getElementPosition = function(ele1,ele2){
+    videomcu.prototype.swapUserVideoPosition = function(ele1,ele2){
         var ele1_div1_id = ele1.children("div").get(0).id;
-        var ele1_start = ele1_div1_id.indexOf("_");
-        var ele1_userId = ele1_div1_id.substr(ele1_start+1,ele1_div1_id.length);//获取被覆盖元素1的id
-        var ele1_position = 0;
+        var ele1_userId = ele1_div1_id.substr(5);//获取被覆盖元素1的id,因为确定是截取前面5个元素，因此从第五个元素一直截取到字符串结束
         var ele2_div1_id = ele2.children("div").get(0).id;
-        var ele2_start = ele2_div1_id.indexOf("_");
-        var ele2_userId = ele2_div1_id.substr(ele2_start+1,ele2_div1_id.length);//获取被覆盖元素2的id
-        var ele2_position = 0;
+        var ele2_userId = ele2_div1_id.substr(5);//获取被覆盖元素2的id,因为确定是截取前面5个元素，因此从第五个元素一直截取到字符串结束
         var ele_obj1;
         var ele_obj2;
         // 此处是为了获取元素的位置
         for(var i=0;i<this.currVideoUsers.length;i++){
             if(this.currVideoUsers[i].userId == ele1_userId){
-                ele1_position = this.currVideoUsers[i].videoPosition;
                 ele_obj1 = this.currVideoUsers[i];
 
             }
             if(this.currVideoUsers[i].userId == ele2_userId){
-                ele2_position = this.currVideoUsers[i].videoPosition;
                 ele_obj2 = this.currVideoUsers[i];
             }
         }
-        console.log("此处获取到ele1_position"+ele1_position+", ele2_position"+ele1_position);
+        console.log("此处获得到"+ele1_userId+"位置:["+ele_obj1.videoPosition+"], 此处获得到"+ele2_userId+"位置:["+ele_obj2.videoPosition+"]");
 
         //此处是为了交换元素的位置
-        ele_obj1.videoPosition = ele2_position;
-        ele_obj2.videoPosition = ele1_position;
-    /*
-        for(var j=0;j<this.currVideoUsers.length;j++){
-            if(this.currVideoUsers[j].userId == ele1_userId){
-                this.currVideoUsers[j].videoPosition = ele2_position;
-            }
-            if(this.currVideoUsers[j].userId == ele2_userId){
-                this.currVideoUsers[j].videoPosition = ele1_position;
-            }
-        }
-*/
+        var temp = ele_obj1.videoPosition;
+        ele_obj1.videoPosition = ele_obj2.videoPosition;
+        ele_obj2.videoPosition = temp;
     }
 
 
@@ -549,7 +534,6 @@ var VideoMCU = function () {
                     originalElementHtml = $(this).parent().html();
                     tagetDraggable = $(this).parent().clone(true);//克隆一个拖动元素的父元素的节点
                     tagetDraggableStyle = tagetDraggable.children("div").children("div").get(0).style.cssText;//获取div2_元素的样式
-                    console.log("tagetDraggableStyle: "+tagetDraggableStyle);
                 }
             });
         }
@@ -563,17 +547,13 @@ var VideoMCU = function () {
                     var targetHtml = $(this).parent().html();
                     var targetDroppable = $(this).parent().clone(true);//克隆一个被覆盖元素的父节点
                     var targetDroppableStyle = targetDroppable.children("div").children("div").get(0).style.cssText;//获取被覆盖元素div2_元素的样式
-                   // var targetDroppableFirstChild = targetDroppable.children("div").children("div").get(0);获取div2元素
-                    that.getElementPosition(tagetDraggable,targetDroppable);//将两个元素的位置交换
+                    that.swapUserVideoPosition(tagetDraggable,targetDroppable);//将两个元素的位置交换
 
                     targetDroppable.children("div").children("div").get(0).setAttribute("style",tagetDraggableStyle);//被覆盖方的div2_样式修改为拖拽元素的样式
                     $(ui.draggable).parent().html(targetDroppable.html());//将被覆盖元素放到拖拽方的位置
-                    console.log("拖拽元素位置填充："+targetDroppable.html());
 
                     tagetDraggable.children("div").children("div").get(0).setAttribute("style",targetDroppableStyle);//被拖拽方的div2_样式修改为被覆盖元素的样式
                     $(this).parent().html(tagetDraggable.html());//将拖拽元素放到被覆盖元素方的位置
-                    console.log("被覆盖元素位置填充："+tagetDraggable.html());
-
                     initSwap();
                 }
             });
