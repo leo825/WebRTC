@@ -321,8 +321,8 @@ var VideoMCU = function () {
         this.buildVideoTag = function (userInfo) {
             var videoStyle = "position: relative; width:100%;height:auto;";
             var videoId = "video-" + userInfo.userId;
-            var videoTag = String.format("<video id='{0}' autoplay='true' muted='muted' src='{1}' style='{2}'></video>",
-                videoId, userInfo.videoURL, videoStyle);
+            var videoTag = String.format("<video id='{0}' autoplay='true'src='{1}' style='{2}'></video>",
+                videoId, userInfo.videoURL, videoStyle);// muted='muted'
 
             if(!IsStringEmpty(userInfo.userName)) {
                 videoTag = this.addVideoText(videoTag, userInfo.userName);
@@ -478,6 +478,51 @@ var VideoMCU = function () {
 
     }
 
+    /**
+     * 根据div1_元素获取元素的位置并且交换两个元素的位置
+     *
+     * */
+
+    videomcu.prototype.getElementPosition = function(ele1,ele2){
+        var ele1_div1_id = ele1.children("div").get(0).id;
+        var ele1_start = ele1_div1_id.indexOf("_");
+        var ele1_userId = ele1_div1_id.substr(ele1_start+1,ele1_div1_id.length);//获取被覆盖元素1的id
+        var ele1_position = 0;
+        var ele2_div1_id = ele2.children("div").get(0).id;
+        var ele2_start = ele2_div1_id.indexOf("_");
+        var ele2_userId = ele2_div1_id.substr(ele2_start+1,ele2_div1_id.length);//获取被覆盖元素2的id
+        var ele2_position = 0;
+        var ele_obj1;
+        var ele_obj2;
+        // 此处是为了获取元素的位置
+        for(var i=0;i<this.currVideoUsers.length;i++){
+            if(this.currVideoUsers[i].userId == ele1_userId){
+                ele1_position = this.currVideoUsers[i].videoPosition;
+                ele_obj1 = this.currVideoUsers[i];
+
+            }
+            if(this.currVideoUsers[i].userId == ele2_userId){
+                ele2_position = this.currVideoUsers[i].videoPosition;
+                ele_obj2 = this.currVideoUsers[i];
+            }
+        }
+        console.log("此处获取到ele1_position"+ele1_position+", ele2_position"+ele1_position);
+
+        //此处是为了交换元素的位置
+        ele_obj1.videoPosition = ele2_position;
+        ele_obj2.videoPosition = ele1_position;
+    /*
+        for(var j=0;j<this.currVideoUsers.length;j++){
+            if(this.currVideoUsers[j].userId == ele1_userId){
+                this.currVideoUsers[j].videoPosition = ele2_position;
+            }
+            if(this.currVideoUsers[j].userId == ele2_userId){
+                this.currVideoUsers[j].videoPosition = ele1_position;
+            }
+        }
+*/
+    }
+
 
     /**
      * 初始化视频拖动事件，用于视频拖动交换
@@ -486,6 +531,8 @@ var VideoMCU = function () {
         var originalElementHtml;
         var tagetDraggableStyle;
         var tagetDraggable;
+        var tagetDraggablePosition;
+        var that = this;
         initSwap();
         function initSwap() {
             initDroppable($("div[id^='div1_']"));
@@ -517,6 +564,7 @@ var VideoMCU = function () {
                     var targetDroppable = $(this).parent().clone(true);//克隆一个被覆盖元素的父节点
                     var targetDroppableStyle = targetDroppable.children("div").children("div").get(0).style.cssText;//获取被覆盖元素div2_元素的样式
                    // var targetDroppableFirstChild = targetDroppable.children("div").children("div").get(0);获取div2元素
+                    that.getElementPosition(tagetDraggable,targetDroppable);//将两个元素的位置交换
 
                     targetDroppable.children("div").children("div").get(0).setAttribute("style",tagetDraggableStyle);//被覆盖方的div2_样式修改为拖拽元素的样式
                     $(ui.draggable).parent().html(targetDroppable.html());//将被覆盖元素放到拖拽方的位置
@@ -677,6 +725,9 @@ var VideoMCU = function () {
             $("td:first div").find("div[id^='div2_']").attr("style","text-align:center;border:0 black solid;width:50%;height:100%;position:absolute;left:25%;overflow: hidden;");
         }
 
+        //获取所有td的个数
+        var tdLength = $("#"+this.videoContainerId).find('td').length;
+            console.log("获取所有td的个数"+tdLength);
         this.initMuteVideo();
         this.initSwapVideo();
     }
