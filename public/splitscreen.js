@@ -622,19 +622,49 @@ var VideoMCU = function () {
     }
 
     /**
+     * 更新视频用户信息，比如用户videoURL/videoPosition产生变更等等
+     * 此操作不会触发自动分屏
+     * @param userInfo
+     */
+    videomcu.prototype.updateUserVideo = function (userInfo) {
+        console.log("开始更新UserVideo", userInfo)
+        var userId = userInfo.userId;
+        if (IsStringEmpty(userId) || IsStringEmpty(userInfo.videoURL)) {
+            console.warn("更新视频用户失败，因参数不合法", userInfo);
+            return;
+        }
+
+        for (var i = 0; i < this.currVideoUsers.length; i++) {
+            if (this.currVideoUsers[i].userId == userId) {
+                console.log("找到对应的视频用户，userId为" + userId);
+                this.currVideoUsers[i].videoURL = userInfo.videoURL;
+                //更新用户对应的video标签src地址
+                $("#video-" + userId).attr("src",userInfo.videoURL);
+
+                if(!IsStringEmpty(userInfo.videoPosition)){
+                    this.currVideoUsers[i].videoPosition = userInfo.videoPosition;
+                }
+            }
+        }
+    }
+
+    /**
      * 增加新的视频用户,如果用户已经在视频中存在，则更新相关的信息
      * @param userInfo  用户视频相关信息，如userId、userName、videoURL、videoPostion、videoParam等
      */
     videomcu.prototype.addUserVideo = function(userInfo){
+        console.log("开始增加视频用户", userInfo);
         var userId = userInfo.userId;
         if(IsStringEmpty(userId) || IsStringEmpty(userInfo.videoURL)){
             console.warn("增加视频用户失败，因参数不合法", userInfo);
             return;
         }
 
+        //如果用于已存在，则进入更新流程
         if(this.isUserExists(userId)){
-            console.log("用户已存在于原有的会议室中，需要清理掉");
-            this.deleteUserFromUserList(userId);
+            console.log("用户已存在于原有的会议室中，直接更新即可");
+            this.updateUserVideo(userInfo);
+            return;
         }
 
         this.currVideoUsers.push(userInfo);
