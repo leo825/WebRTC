@@ -22,6 +22,30 @@ app.get('/mcu/removeRoom.do', function(req, res){  /* http://192.168.4.102:3000/
 	res.send("已经将房间 "+roomNum+" 移除了");
 });
 
+//用于获取用户状态
+//请求：getuserstate?userId=xinjiang
+//返回：{"userid": "xinjiang","isbusy": false}
+app.get('/getuserstate',function(req, res){
+    var userId =  req.query.userId;
+    console.log("接收到获取用户状态请求，用户为" + userId);
+    var isBusy = false;
+    var result = {};
+    result.userid = userId;
+    outerloop:
+    for(var key in SkyRTC.rtc.rooms){
+        var room = SkyRTC.rtc.rooms[key];
+        for(var soc in room){
+            if(room[soc].userId === userId){
+                isBusy = true;
+                break outerloop;
+            }
+        }
+    }
+    result.isbusy = isBusy;
+    console.log("获取用户状态，返回结果为", result);
+    res.send(result);
+});
+
 app.get('/logs',function(req,res){
     res.sendfile(__dirname + '/logmanager.html');
 });
