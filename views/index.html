@@ -30,7 +30,7 @@
             defaultShowVideo = request("defaultShowVideo") || "show";
 
             //初始化日志管理器
-            logManager = new LogManager(userID);
+            logManager = new LogManager(userID, "log/uploadlog");
 
             //初始化RTC相关的回调函数
             initRTC();

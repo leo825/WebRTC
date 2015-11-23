@@ -4,16 +4,22 @@ var server = require('http').createServer(app);
 var SkyRTC = require('skyrtc').listen(server);
 var path = require("path");
 
-var queryString = require('querystring');   //用于解析post请求参数
-var fs = require('fs');
-
-var logPath =  __dirname + "/logs";
+var routes = require("./routes");
+var route_log = require("./routes/log");
 
 var port = process.env.PORT || 3000;
 server.listen(port);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'test')));
+
+app.get("/", routes.index);
+
+//日志文件相关路由
+app.get("/log", route_log.logs);
+app.get("/log/getloglist", route_log.getLogList);
+app.get("/log/uploadlog", route_log.uploadLog);
+app.get("/log/downloadlog", route_log.downloadLog);
 
 app.get('/mcu/removeRoom.do', function(req, res){  /* http://192.168.4.102:3000/mcu/removeRoom.do?roomNum=1 */
     console.log('需要关闭的roomNum='+req.query.roomNum);
@@ -46,49 +52,8 @@ app.get('/getuserstate',function(req, res){
     res.send(result);
 });
 
-app.get('/logs',function(req,res){
-    res.sendfile(__dirname + '/logmanager.html');
-});
-
-//用于获取日志文件列表
-app.get('/getloglist',function(req,res){
-    var fileList = [];
-    fs.readdirSync(logPath).forEach(function(file){
-        fileList.push(file);
-    });
-    res.send(fileList);
-});
-
-//用于日志文件上传，根据用户id保存到不同的日志文件中
-app.get('/uploadlog',function(req,res){
-	//console.log(req.query.userId + ":" + req.query.logData);
-    fs.appendFile(logPath + "/" + req.query.userId + ".log", req.query.logData + "\n");
-    res.send("ok");
-});
-
-app.get('/downloadlog',function(req,res){
-    var fileName = req.query.fileName;
-    if(fileName!=null && fileName.length>0){
-        var file = logPath + "/" + fileName;
-        fs.stat(file, function(err, stat){
-            if(err == null){
-                res.download(file);
-            }else{
-                res.send("下载日志失败，因文件" + fileName + "不存在");
-            }
-        })
-    }else {
-        res.send("下载日志失败，因文件名为空");
-    }
-});
-
-
 SkyRTC.rtc.on('remove_room',function(roomNum){
 	console.log("已经将房间 "+roomNum+" 移除了");
-});
-
-app.get('/', function(req, res) {
-	res.sendfile(__dirname + '/index.html');
 });
 
 SkyRTC.rtc.on('new_connect', function(socket) {
