@@ -30,3 +30,4 @@ app.get("/api/splitscreen", route_api.splitScreen);
 app.get('/api/closeroom', route_api.closeRoom);
 app.get('/api/closeuser', route_api.closeUser);
 app.get('/api/getuserstate', route_api.getUserState);
+app.get('/api/sendapi', route_api.sendApi);

@@ -177,11 +177,13 @@ var SkyRTC = function() {
             that.emit("socket_opened", socket);
         };
 
-        socket.onmessage = function(message) {
+        socket.onmessage = function (message) {
             //console.log("socket.onmessage, 收到的消息为",message);
             var json = JSON.parse(message.data);
             if (json.eventName) {
                 that.emit(json.eventName, json.data);
+            } else if (json.api) {
+                that.emit("api", json);
             } else {
                 that.emit("socket_receive_message", socket, json);
             }
@@ -288,6 +290,10 @@ var SkyRTC = function() {
 
         this.on('receive_file_error', function(error, sendId) {
             that.cleanReceiveFile(sendId);
+        });
+
+        this.on("api", function(data){
+            console.log("接收到服务器发来的命令", data);
         });
 
         this.on('ready', function() {

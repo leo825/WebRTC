@@ -53,4 +53,25 @@ exports.closeRoom = function(req, res){
  */
 exports.closeUser = function(req, res){
     console.log("开始关闭用户");
-}
+};
+
+/**
+ * 用于向会议室发送api命令
+ * 请求：roomId=1000&apiName=xxx&apiData=yyy
+ * 返回：true/false
+ */
+exports.sendApi = function(req, res){
+    var result = false;
+    var apiName = req.query.apiName;
+    var apiData = req.query.apiData;
+    var roomId = req.query.roomId;
+    console.log("收到向客户端发送命令请求,roomId[" + roomId + "], apiName[" + apiName + "], apiData[" + apiData + "]");
+    if(apiName && apiData){
+        SkyRTC.rtc.sendApiToRoom(roomId, apiName, apiData);
+        result = true;
+    }else{
+        console.log("参数不全，发送命令失败")
+    }
+
+    res.send(result);
+};
