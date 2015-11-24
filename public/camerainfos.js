@@ -67,7 +67,7 @@ function getCameraIdByName(name){
  * 			getCameraInfos(function(cameInfos){
  *				alert(JSON.stringify(cameInfos));
  *			});
- * @return 通过回调函数返回摄像头列表
+ * @return
  */
 function initAndGetCameraInfos(callBack) {
     if (!MediaStreamTrack) {
@@ -103,7 +103,6 @@ function initAndGetCameraInfos(callBack) {
  * @param callBack  设置名称完成后的回调函数
  */
 function setCameraName(id, callBack) {
-    var camName;
     //给摄像头赋名称
     var constraints = {};
     constraints.video = {

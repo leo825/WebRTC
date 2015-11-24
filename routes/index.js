@@ -3,5 +3,5 @@
  */
 exports.index = function(req, res) {
     var indexFullPath = process.cwd() + '/views/index.html';
-    res.sendfile(indexFullPath);
+    res.sendfile(indexFullPath, null, null);
 };

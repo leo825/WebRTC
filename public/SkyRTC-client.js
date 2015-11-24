@@ -3,8 +3,7 @@ var SkyRTC = function() {
     var URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
     var getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
     var nativeRTCIceCandidate = (window.mozRTCIceCandidate || window.RTCIceCandidate);
-    var nativeRTCSessionDescription = (window.mozRTCSessionDescription || window.RTCSessionDescription); // order is very important: "RTCSessionDescription" defined in Nighly but useless
-    var moz = !!navigator.mozGetUserMedia;
+    var nativeRTCSessionDescription = (window.mozRTCSessionDescription || window.RTCSessionDescription); // order is very important: "RTCSessionDescription" defined in nightly but useless
     var iceServer = {
         "iceServers": [{
             "url": "stun:stun.voipstunt.com"
@@ -52,13 +51,13 @@ var SkyRTC = function() {
         //本地media stream
         this.localMediaStream = null;
         //所在房间
-        this.room = "";
+        //this.room = "";
         //接收文件时用于暂存接收文件
         this.fileData = {};
         //本地WebSocket连接
         this.socket = null;
         //本地socket的id，由后台服务器创建
-        this.me = null;
+        //this.me = null;
         //保存所有与本地相连的peer connection， 键为socket id，值为PeerConnection类型
         this.peerConnections = {};
         //保存所有与本地相连的用户id，键为socket id， 值为用户id
@@ -109,7 +108,7 @@ var SkyRTC = function() {
         }
 
         return result;
-    }
+    };
 
     //根据socket id返回用户id及用户姓名
     skyrtc.prototype.getUserInfoBySocketId = function(socketId){
@@ -123,6 +122,7 @@ var SkyRTC = function() {
     };
 
     //根据user id返回socket id及用户姓名
+    //noinspection JSUnusedGlobalSymbols,JSUnresolvedVariable
     skyrtc.prototype.getUserInfoByUserId = function(userId){
         if(userId in this.peerUserNames){
             var userName = this.peerUserNames[userId];
@@ -142,24 +142,24 @@ var SkyRTC = function() {
     //判断当前是否仍处于会议模式
     skyrtc.prototype.isLive = function(){
         return Object.keys(this.peerUserIds).length >0;
-    }
+    };
 
     /*************************服务器连接部分***************************/
 
-    //断开与服务器的websocket连接
+    //断开与服务器的webSocket连接
     skyrtc.prototype.unConnect = function(){
         try{
-            console.log("开始关闭socket连接...")
+            console.log("开始关闭socket连接...");
             this.socket.close();
             console.log("完成关闭socket连接.")
         }catch(error){
             console.log("在关闭本地socket连接时出现异常" + error);
         }
-    }
+    };
 
-    //本地连接信道，信道为websocket
+    //本地连接信道，信道为webSocket
     skyrtc.prototype.connect = function(server, room, userId, userName) {
-        console.log("connect:开始连接websocket，参数:server[" + server + "], room[" + room + "],userid[" + userId + "]");
+        console.log("connect:开始连接webSocket，参数:server[" + server + "], room[" + room + "],userId[" + userId + "]");
         var socket,
             that = this;
         room = room || "";
@@ -198,7 +198,7 @@ var SkyRTC = function() {
             console.log("socket连接已被关闭", data);
             that.localMediaStream.stop();
             var pcs = that.peerConnections;
-            for (i = pcs.length; i--;) {
+            for (var i = pcs.length; i--;) {
                 that.closePeerConnection(pcs[i]);
             }
             that.peerConnections = [];
@@ -215,11 +215,11 @@ var SkyRTC = function() {
             console.log("收到_peers事件", data);
             //获取所有服务器上的
             that.connections = data.connections;
-            that.me = data.you;
+            //that.me = data.you;
 
             if (data.users.length > 0) {
-                var logMsg, tuser;
-                for (i = 0; i < data.users.length; i++) {
+                var logMsg = "", tuser;
+                for (var i = 0; i < data.users.length; i++) {
                     tuser = data.users[i];
                     that.addUserInfo(tuser.socketId, tuser.userId, tuser.userName);
                     logMsg += "[" + JSON.stringify(tuser) + "]";
@@ -245,8 +245,7 @@ var SkyRTC = function() {
             that.connections.push(data.socketId);
             that.addUserInfo(data.socketId, data.userId, data.userName);
             console.log("有新的用户呼入，用户为" + data.userId + ", 姓名为" + data.userName);
-            var pc = that.createPeerConnection(data.socketId),
-                i, m;
+            var pc = that.createPeerConnection(data.socketId);
             pc.addStream(that.localMediaStream);
             that.emit('new_peer', data.socketId);
         });
@@ -285,6 +284,7 @@ var SkyRTC = function() {
         });
 
         this.on('send_file_error', function(error, socketId, sendId, file) {
+            console.log("发送文件错误", file);
             that.cleanSendFile(sendId, socketId);
         });
 
@@ -322,7 +322,7 @@ var SkyRTC = function() {
             that.addDataChannels();
             that.sendOffers();
         });
-    }
+    };
 
     //加载摄像头并初始化
     skyrtc.prototype.createStreamAndInit = function(options){
@@ -333,7 +333,7 @@ var SkyRTC = function() {
             that.addDataChannels();
             that.sendOffers();
         });
-    }
+    };
 
     //创建本地流
     skyrtc.prototype.createStream = function(options, handler) {
@@ -361,9 +361,7 @@ var SkyRTC = function() {
     //将本地流添加到所有的PeerConnection实例中
     skyrtc.prototype.addStreams = function() {
         console.log("开始将本地流加到所有PeerConnection中");
-        var i, m,
-            stream,
-            connection;
+        var connection;
         for (connection in this.peerConnections) {
             this.peerConnections[connection].addStream(this.localMediaStream);
         }
@@ -402,7 +400,7 @@ var SkyRTC = function() {
     //接收到Offer类型信令后作为回应返回answer类型信令
     skyrtc.prototype.receiveOffer = function(socketId, sdp) {
         console.log("接收到offer信令, socketId[" + socketId + "]",sdp);
-        var pc = this.peerConnections[socketId];
+        //var pc = this.peerConnections[socketId];
         this.sendAnswer(socketId, sdp);
     };
 
@@ -447,7 +445,7 @@ var SkyRTC = function() {
 
     //创建单个PeerConnection
     skyrtc.prototype.createPeerConnection = function(socketId) {
-        console.log("开始创建PeerConnection, sockerId[" + socketId + "]");
+        console.log("开始创建PeerConnection, socketId[" + socketId + "]");
         var that = this;
         var pc = new PeerConnection(iceServer);
         this.peerConnections[socketId] = pc;
@@ -465,13 +463,13 @@ var SkyRTC = function() {
         };
 
         pc.onopen = function() {
-            console.log("打开peerConnection, " + socketId)
+            console.log("打开peerConnection, " + socketId);
             that.emit("pc_opened", socketId, pc);
         };
 
         pc.onaddstream = function(evt) {
             pc.isStreamAdded = true;
-            console.log("添加流到peerConnection, " + socketId)
+            console.log("添加流到peerConnection, " + socketId);
             that.emit('pc_add_stream', evt.stream, socketId, pc);
         };
 
@@ -488,11 +486,9 @@ var SkyRTC = function() {
         pc.close();
     };
 
+    /////////////////////////////////数据通道连接部分/////////////////////////////////
 
-    /***********************数据通道连接部分*****************************/
-
-
-    //消息广播
+    //noinspection JSUnusedGlobalSymbols,JSUnresolvedVariable
     skyrtc.prototype.broadcast = function(message) {
         var socketId;
         for (socketId in this.dataChannels) {
@@ -520,7 +516,7 @@ var SkyRTC = function() {
 
     //对某一个PeerConnection创建Data channel
     skyrtc.prototype.createDataChannel = function(socketId, label) {
-        var pc, key, channel;
+        var pc, channel;
         pc = this.peerConnections[socketId];
 
         if (!socketId) {
@@ -547,6 +543,7 @@ var SkyRTC = function() {
         };
 
         channel.onclose = function(event) {
+            console.log("dataChannel已关闭", event);
             delete that.dataChannels[socketId];
             that.emit('data_channel_closed', channel, socketId);
         };
@@ -597,10 +594,7 @@ var SkyRTC = function() {
         }
     };
 
-    /***********************发送者部分***********************/
-
-
-    //通过Dtata channel向房间内所有其他用户广播文件
+    //noinspection JSUnusedGlobalSymbols,JSUnresolvedVariable
     skyrtc.prototype.shareFile = function(dom) {
         var socketId,
             that = this;
@@ -609,11 +603,11 @@ var SkyRTC = function() {
         }
     };
 
+
     //向某一单个用户发送文件
     skyrtc.prototype.sendFile = function(dom, socketId) {
         var that = this,
             file,
-            reader,
             fileToSend,
             sendId;
         if (typeof dom === 'string') {
@@ -703,7 +697,7 @@ var SkyRTC = function() {
         var that = this,
             fileToSend,
             reader,
-            initSending = function(event, text) {
+            initSending = function(event) {
                 fileToSend.state = "send";
                 fileToSend.fileData = event.target.result;
                 fileToSend.sendedPackets = 0;
@@ -787,10 +781,10 @@ var SkyRTC = function() {
             });
         hyperlink.href = fileInfo.data;
         hyperlink.target = '_blank';
-        hyperlink.download = fileInfo.name || dataURL;
+        hyperlink.download = fileInfo.name;
 
         hyperlink.dispatchEvent(mouseEvent);
-        (window.URL || window.webkitURL).revokeObjectURL(hyperlink.href);
+        URL.revokeObjectURL(hyperlink.href);
         that.emit("receive_file", sendId, fileInfo.socketId, fileInfo.name);
         that.cleanReceiveFile(sendId);
     };
@@ -808,13 +802,14 @@ var SkyRTC = function() {
     };
 
     //发送同意接收文件信令
+    //noinspection JSUnusedGlobalSymbols,JSUnresolvedVariable
     skyrtc.prototype.sendFileAccept = function(sendId) {
         var that = this,
             fileInfo = that.receiveFiles[sendId],
             channel = that.dataChannels[fileInfo.socketId],
             packet;
         if (!channel) {
-            that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
+            that.emit("receive_file_error", new Error("Channel has been destroyed"), sendId, socketId);
         }
         packet = {
             type: "__file",
@@ -825,13 +820,14 @@ var SkyRTC = function() {
     };
 
     //发送拒绝接受文件信令
+    //noinspection JSUnusedGlobalSymbols,JSUnresolvedVariable
     skyrtc.prototype.sendFileRefuse = function(sendId) {
         var that = this,
             fileInfo = that.receiveFiles[sendId],
             channel = that.dataChannels[fileInfo.socketId],
             packet;
         if (!channel) {
-            that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
+            that.emit("receive_file_error", new Error("Channel has been destroyed"), sendId, socketId);
         }
         packet = {
             type: "__file",

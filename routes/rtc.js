@@ -7,7 +7,7 @@ SkyRTC.rtc.on('remove_room',function(roomNum){
 });
 
 SkyRTC.rtc.on('new_connect', function(socket) {
-    console.log('创建新连接');
+    console.log('创建新连接' + socket);
 });
 
 SkyRTC.rtc.on('remove_peer', function(socket) {
@@ -23,15 +23,15 @@ SkyRTC.rtc.on('socket_message', function(socket, msg) {
 });
 
 SkyRTC.rtc.on('ice_candidate', function(socket, ice_candidate) {
-    console.log("接收到来自" + socket.id + "的ICE Candidate");
+    console.log("接收到来自" + socket.id + "的ICE Candidate" + ice_candidate);
 });
 
 SkyRTC.rtc.on('offer', function(socket, offer) {
-    console.log("接收到来自" + socket.id + "的Offer");
+    console.log("接收到来自" + socket.id + "的Offer" + offer);
 });
 
 SkyRTC.rtc.on('answer', function(socket, answer) {
-    console.log("接收到来自" + socket.id + "的Answer");
+    console.log("接收到来自" + socket.id + "的Answer" + answer);
 });
 
 SkyRTC.rtc.on('error', function(error) {

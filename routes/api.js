@@ -4,8 +4,8 @@
 
 /**
  * 用于获取用户状态
- * 请求：userId=xinjiang
- * 返回：{"userid": "xinjiang","isbusy": false}
+ * 请求：userId=xinJ
+ * 返回：{"userid": "xinJ","isbusy": false}
  */
 exports.getUserState = function(req, res){
     var userId =  req.query.userId;
@@ -32,14 +32,14 @@ exports.getUserState = function(req, res){
  * 全局分屏函数
  */
 exports.splitScreen = function(req, res){
-    console.log("开始进行全局分屏")
+    console.log("开始进行全局分屏" + req + res);
 };
 
 /**
  * 关闭会议室
  */
 exports.closeRoom = function(req, res){
-    console.log("开始关闭会议室" + req.query.roomNum);
+    console.log("开始关闭会议室" + req.query.roomNum + res);
     /*
     console.log('需要关闭的roomNum='+req.query.roomNum);
     var roomNum = req.query.roomNum;
@@ -52,7 +52,7 @@ exports.closeRoom = function(req, res){
  * 关闭用户
  */
 exports.closeUser = function(req, res){
-    console.log("开始关闭用户");
+    console.log("开始关闭用户" + req + res);
 };
 
 /**

@@ -35,7 +35,7 @@ Date.prototype.Format = function(formatStr)
     str=str.replace(/s|S/g,this.getSeconds());
 
     return str;
-}
+};
 
 /**
  * 日志管理器，如果接管console的日志内容的话，会将客户端日志发送到服务器，按用户保存到各自的日志文件中
@@ -86,10 +86,10 @@ function LogManager(userId, serverUrl){
                 }
             }
         }
-        var methods = ['log', 'warn', 'error']
+        var methods = ['log', 'warn', 'error'];
         for (var i = 0; i < methods.length; i++)
             intercept(methods[i])
-    }
+    };
 
     /**
      * 恢复系统默认的日志输出功能
@@ -103,19 +103,19 @@ function LogManager(userId, serverUrl){
 }
 
 //判断字符串是否为空
+/**
+ * @return {boolean}
+ */
 function IsStringEmpty(str)
 {
-    if(str && str!='')
-        return false;
-    else
-        return true;
+    return !(str && str != '');
 }
 
 //获取页面的参数
 function request(paras) {
     var url = location.href;
     var paraString = url.substring(url.indexOf("#") + 1, url.length).split("&");
-    var paraObj = {}
+    var paraObj = {};
     for (i = 0; j = paraString[i]; i++) {
         paraObj[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(j.indexOf("=") + 1, j.length);
     }

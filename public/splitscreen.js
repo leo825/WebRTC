@@ -260,9 +260,6 @@ var VideoMCU = function () {
 </table>";
 
 
-    //本地用户的userid
-    var LOCAL_USER_USERID;
-
     function videomcu() {
         //无视频时显示的默认图片全路径
         this.defaultImgPath = "defaultConf.bmp";
@@ -286,14 +283,14 @@ var VideoMCU = function () {
         this.getSplitHTML = function (screenCount) {
             var id = 'VIDEO_SPLIT_LAYOUT' + screenCount;
             return eval(id);
-        }
+        };
 
         /**
          * 获取无视频时显示的默认图片div
          */
         this.getDefaultImgDiv = function(){
             return String.format(DEFAULT_IMG_DIV_FORMAT, this.defaultImgPath);
-        }
+        };
 
         /**
          * 将视频附加到页面表格中
@@ -312,7 +309,7 @@ var VideoMCU = function () {
                     tds[i].innerHTML = this.getDefaultImgDiv();
                 }
             }
-        }
+        };
 
         /**
          * 根据用户信息，构建video标签，并在外面套上一层div，以便控制
@@ -321,16 +318,16 @@ var VideoMCU = function () {
         this.buildVideoTag = function (userInfo) {
             var videoStyle = "position: relative; width:100%;height:auto;";
             var videoId = "video-" + userInfo.userId;
-            var videoTag = String.format("<video id='{0}' autoplay='true'src='{1}' style='{2}'></video>",
+            //noinspection HtmlUnknownTarget
+            var videoTag = String.format("<video id='{0}' autoplay='true' src='{1}' style='{2}'></video>",
                 videoId, userInfo.videoURL, videoStyle);// muted='muted'
 
             if(!IsStringEmpty(userInfo.userName)) {
                 videoTag = this.addVideoText(videoTag, userInfo.userName);
             }
             videoTag = this.addMuteImg(videoTag,userInfo.userId);
-            var wholeTag = String.format(VIDEO_DIV_FORMAT, "div1_" + userInfo.userId, "div2_" + userInfo.userId, videoTag);
-            return wholeTag;
-        }
+            return String.format(VIDEO_DIV_FORMAT, "div1_" + userInfo.userId, "div2_" + userInfo.userId, videoTag);
+        };
 
         /**
          * 在视频上面增加文字显示
@@ -340,17 +337,18 @@ var VideoMCU = function () {
         this.addVideoText = function (videoTag, userName) {
             var txtDiv = String.format(VIDEO_TEXT_DIV_FORMAT, userName);
             return videoTag + txtDiv;
-        }
+        };
 
         /**
          * 在视频上面添加静音图标
-         * @param
+         * @param videoTag  视频标签
+         * @param userId    用户id
          *
          * */
         this.addMuteImg = function (videoTag, userId){
             var img = String.format(VIDEO_MUTE_IMG,'mute_img_'+userId);
             return videoTag + img;
-        }
+        };
 
 
 
@@ -375,7 +373,7 @@ var VideoMCU = function () {
                     }
                 }
             }
-        }
+        };
 
         /**
          * 对用户列表的视频位置进行重新编号,从1开始编号（在自动分屏时用到）
@@ -388,7 +386,7 @@ var VideoMCU = function () {
             }
 
             return userInfos;
-        }
+        };
 
         /**
          * 判断用户是否处于MCU视频列表中
@@ -401,7 +399,7 @@ var VideoMCU = function () {
                 }
             }
             return false;
-        }
+        };
 
         /**
          * 从用户列表中删除指定的用户
@@ -443,14 +441,13 @@ var VideoMCU = function () {
         }
 
         return screenNum;
-    }
+    };
 
     /**
      * 初始化视频双击事件，用于视频的最大化显示和还原
      * @param videoContainerId  用于存储所有视频的父容器id
      */
     videomcu.prototype.initEnlargeVideo = function (videoContainerId) {
-        var that = this;
         //绑定视频双击放大事件，即使视频被动态的增减，双击都有效
         $("#" + videoContainerId).on("dblclick","video",function() {
             $(this)[0].webkitRequestFullScreen();
@@ -458,7 +455,7 @@ var VideoMCU = function () {
                 $(this)[0].webkitExitFullscreen();
             }
         });
-    }
+    };
 
     /**
      *绑定静音事件
@@ -476,7 +473,7 @@ var VideoMCU = function () {
             }
         });
 
-    }
+    };
 
     /**
      * 根据div1_元素分别获取用户id，然后交换用户视频的videoPostion
@@ -506,7 +503,7 @@ var VideoMCU = function () {
         var temp = ele_obj1.videoPosition;
         ele_obj1.videoPosition = ele_obj2.videoPosition;
         ele_obj2.videoPosition = temp;
-    }
+    };
 
 
     /**
@@ -514,9 +511,8 @@ var VideoMCU = function () {
      */
     videomcu.prototype.initSwapVideo = function(){
         var originalElementHtml;
-        var tagetDraggableStyle;
-        var tagetDraggable;
-        var tagetDraggablePosition;
+        var targetDraggableStyle;
+        var targetDraggable;
         var that = this;
         initSwap();
         function initSwap() {
@@ -531,9 +527,10 @@ var VideoMCU = function () {
                 cursor: "move",
                 revert: "invalid",
                 start: function(event,ui){
+                    console.log("开始拖动" + event + ui);
                     originalElementHtml = $(this).parent().html();
-                    tagetDraggable = $(this).parent().clone(true);//克隆一个拖动元素的父元素的节点
-                    tagetDraggableStyle = tagetDraggable.children("div").children("div").get(0).style.cssText;//获取div2_元素的样式
+                    targetDraggable = $(this).parent().clone(true);//克隆一个拖动元素的父元素的节点
+                    targetDraggableStyle = targetDraggable.children("div").children("div").get(0).style.cssText;//获取div2_元素的样式
                 }
             });
         }
@@ -544,30 +541,20 @@ var VideoMCU = function () {
                 hoverClass: "ui-drop-hover",
                 accept: ":not(.ui-sortable-helper)",
                 drop: function (event, ui) {
-                    var targetHtml = $(this).parent().html();
                     var targetDroppable = $(this).parent().clone(true);//克隆一个被覆盖元素的父节点
                     var targetDroppableStyle = targetDroppable.children("div").children("div").get(0).style.cssText;//获取被覆盖元素div2_元素的样式
-                    that.swapUserVideoPosition(tagetDraggable,targetDroppable);//将两个元素的位置交换
+                    that.swapUserVideoPosition(targetDraggable,targetDroppable);//将两个元素的位置交换
 
-                    targetDroppable.children("div").children("div").get(0).setAttribute("style",tagetDraggableStyle);//被覆盖方的div2_样式修改为拖拽元素的样式
+                    targetDroppable.children("div").children("div").get(0).setAttribute("style",targetDraggableStyle);//被覆盖方的div2_样式修改为拖拽元素的样式
                     $(ui.draggable).parent().html(targetDroppable.html());//将被覆盖元素放到拖拽方的位置
 
-                    tagetDraggable.children("div").children("div").get(0).setAttribute("style",targetDroppableStyle);//被拖拽方的div2_样式修改为被覆盖元素的样式
-                    $(this).parent().html(tagetDraggable.html());//将拖拽元素放到被覆盖元素方的位置
+                    targetDraggable.children("div").children("div").get(0).setAttribute("style",targetDroppableStyle);//被拖拽方的div2_样式修改为被覆盖元素的样式
+                    $(this).parent().html(targetDraggable.html());//将拖拽元素放到被覆盖元素方的位置
                     initSwap();
                 }
             });
         }
-
-        function swapElement(ele1,ele2){
-            var ele1Parent = ele1.parent();
-            var ele2Parent = ele2.parent();
-
-            var ele1Html = ele1Parent.html();
-            ele1Parent.html(ele2Parent.html());
-            ele2Parent.html(ele1Html);
-        }
-    }
+    };
 
 
     /**
@@ -591,7 +578,7 @@ var VideoMCU = function () {
 
         //初始化视频最大时的相关操作
         this.initEnlargeVideo(infos.videoContainerId);
-    }
+    };
 
     /**
      * 清理分屏页面，并回复到初始状态
@@ -599,7 +586,7 @@ var VideoMCU = function () {
     videomcu.prototype.cleanUp = function(){
         $("#" + this.videoContainerId).html("");
         this.currVideoUsers = [];
-    }
+    };
 
     /**
      * 更新视频用户信息，比如用户videoURL/videoPosition产生变更等等
@@ -607,7 +594,7 @@ var VideoMCU = function () {
      * @param userInfo
      */
     videomcu.prototype.updateUserVideo = function (userInfo) {
-        console.log("开始更新UserVideo", userInfo)
+        console.log("开始更新UserVideo", userInfo);
         var userId = userInfo.userId;
         if (IsStringEmpty(userId) || IsStringEmpty(userInfo.videoURL)) {
             console.warn("更新视频用户失败，因参数不合法", userInfo);
@@ -626,7 +613,7 @@ var VideoMCU = function () {
                 }
             }
         }
-    }
+    };
 
     /**
      * 增加新的视频用户,如果用户已经在视频中存在，则更新相关的信息
@@ -646,7 +633,7 @@ var VideoMCU = function () {
         //新增用户后，重新分屏
         var videoCount = this.getScreenNumByUserNum(this.currVideoUsers.length);
         this.SplitVideoScreen(videoCount);
-    }
+    };
 
     /**
      * 删除指定的视频用户
@@ -667,7 +654,7 @@ var VideoMCU = function () {
         }else{
             console.log("移除视频用户失败，未根据用户id[" + userId + "]找到对应的视频用户")
         }
-    }
+    };
 
     /**
      * 对用户视频进行分屏，并附加到指定的容器中
@@ -704,8 +691,8 @@ var VideoMCU = function () {
         this.currScreenSplitNum = screenNum;
 
         //生成用于分屏布局的table，并加载到页面中
-        var tableHtml = this.getSplitHTML(screenNum);
-        document.getElementById(this.videoContainerId).innerHTML = tableHtml;
+        //noinspection JSValidateTypes
+        document.getElementById(this.videoContainerId).innerHTML = this.getSplitHTML(screenNum);
 
         //用户存放视频video标签
         var videoTagList = [];
@@ -732,7 +719,7 @@ var VideoMCU = function () {
             console.log("获取所有td的个数"+tdLength);
         this.initMuteVideo();
         this.initSwapVideo();
-    }
+    };
 
     return new videomcu();
-}
+};

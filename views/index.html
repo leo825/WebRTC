@@ -43,10 +43,11 @@
 
             var videoName = request("videoName");
             //去除字符串中的双引号
-            videoName = videoName.replace(/\"/g, "");
+            videoName = videoName.replace(/"/g, "");
 
             //获取摄像头列表，并在获取后进行初始化
             initAndGetCameraInfos(function (videoInfos) {
+                console.log("获取摄像头列表成功", videoInfos);
                 //如果url中未指定摄像头，则自己指定
                 if (videoName == null || videoName.length == 0) {
                     //获取摄像头列表的第一个摄像头，作为默认摄像头
@@ -73,6 +74,7 @@
 
             //成功创建WebSocket连接
             rtc.on("socket_connected", function (socket) {
+                console.log("socket创建成功", socket);
                 var audio = request("audio");
                 var speaker = request("speaker");
                 isAudioOn = getParams(audio);
@@ -90,7 +92,7 @@
 
             //断开WebSocket连接
             rtc.on("socket_closed", function(socket){
-                console.log("WebSocket连接已断开，开始重置RTC与MCU");
+                console.log("WebSocket连接已断开，开始重置RTC与MCU", socket);
                 //断开后重新初始化rtc，防止后面再次调用
                 initRTC();
                 //清理页面
@@ -199,8 +201,7 @@
 
         //获取视频数量
         function getVideosNumber() {
-            var videoNumber = document.getElementsByTagName("video").length;
-            return videoNumber;
+            return document.getElementsByTagName("video").length;
         }
 
         //加入会议室
@@ -277,7 +278,7 @@
         }
     </script>
     分屏:
-    <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)">
+    <select name="分屏" onchange="divScreen(this.options[this.options.selectedIndex].value)" title="分屏">
         <option value="1">1分屏</option>
         <option value="2">2分屏</option>
         <option value="3">3分屏</option>
@@ -293,7 +294,7 @@
     </select>
     &nbsp;
     切换摄像头
-    <select id="switchcameraddl" name="切换摄像头"></select>
+    <select id="switchcameraddl" name="切换摄像头" title="切换摄像头"></select>
     &nbsp;
     <input type="button" id="uploadLog" value="上传日志"/>
 </div>

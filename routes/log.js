@@ -5,7 +5,7 @@ var fs = require('fs');
 var logPath =  process.cwd() + "/logs";
 
 exports.logs = function(req,res){
-    res.sendfile(process.cwd() + '/views/logmanager.html');
+    res.sendfile(process.cwd() + '/views/logmanager.html', null, null);
 };
 
 //用于获取日志文件列表
@@ -32,7 +32,7 @@ exports.downloadLog = function(req,res){
             if(err == null){
                 res.download(file);
             }else{
-                res.send("下载日志失败，因文件" + fileName + "不存在");
+                res.send("下载日志失败，因文件" + fileName + "不存在" + stat);
             }
         })
     }else {
