@@ -3,8 +3,13 @@ var app = express();
 var server = require('http').createServer(app);
 var path = require("path");
 
+
 //全局变量
 global.SkyRTC = require('skyrtc').listen(server);
+global.log4js = require("log4js");
+
+//初始化日志模块
+log4js.configure("log4js.json");
 
 var routes = require("./routes");
 var route_log = require("./routes/log");
