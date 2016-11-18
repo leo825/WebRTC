@@ -116,7 +116,7 @@ function setCameraName(id, callBack) {
 
         if (!!stream) {
             console.log("the camera : " + track.label + " stream is stop.");
-            stream.stop();
+            //stream._stop();
         }
 
         if(Object.keys(CAMERA_ID_NAME_MAP).length == CAMERA_ID_LIST.length){

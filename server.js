@@ -1,6 +1,14 @@
 var express = require('express');
+var fs = require('fs');
+var options={
+    key: fs.readFileSync('./server-key.pem'),
+    cert: fs.readFileSync('./server-cert.pem'),
+    requestCert: true,
+    rejectUnauthorized: false
+}
+
 var app = express();
-var server = require('http').createServer(app);
+var server = require('https').createServer(options,app);
 var path = require("path");
 
 
@@ -36,3 +44,4 @@ app.get('/api/closeroom', route_api.closeRoom);
 app.get('/api/closeuser', route_api.closeUser);
 app.get('/api/getuserstate', route_api.getUserState);
 app.get('/api/sendapi', route_api.sendApi);
+app.get('/api/sendmessage',route_api.sendMessage);

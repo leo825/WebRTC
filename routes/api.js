@@ -70,8 +70,35 @@ exports.sendApi = function(req, res){
         SkyRTC.rtc.sendApiToRoom(roomId, apiName, apiData);
         result = true;
     }else{
-        console.log("参数不全，发送命令失败")
+        console.log("参数不全，发送命令失败");
     }
 
     res.send(result);
+};
+
+/**
+ * 用于向指定用户发送消息
+ *
+ * */
+exports.sendMessage = function(req,res){
+    var resultObj = new Object();
+    var result = false, resultMsg="";
+    var reqUser = req.query.reqUser;
+    var resToUser = req.query.resToUser;
+    var reqMsg = req.query.reqMsg;
+
+    console.log("收到来自客户端发来的消息请求,reqUser["+reqUser+"], resToUser["+resToUser+"], reqMsg["+reqMsg+"]");
+    if(reqUser && resToUser){
+        result = SkyRTC.rtc.sendMessageToUser(reqUser,resToUser,reqMsg);
+        if(result){
+            resultMsg = "send message success !";
+        }else{
+            resultMsg = "can't find this user in conference rooms !";
+        }
+    }else{
+        resultMsg = "the parameter is not complete";
+    }
+    resultObj.result=result;
+    resultObj.msg = resultMsg;
+    res.send(JSON.stringify(resultObj));
 };

@@ -184,7 +184,7 @@
             console.log("开始连接WebSocket");
             if (!IsStringEmpty(currRoomNum)) {
                 //连接WebSocket服务器
-                var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+                var wsUrl = "wss:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
                 rtc.connect(wsUrl, currRoomNum, userID, userName);
                 console.log("连接 WebSocket服务器:" + wsUrl, currRoomNum);
             } else {

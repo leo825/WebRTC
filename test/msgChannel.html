@@ -1,0 +1,80 @@
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>MCU Conference</title>
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2E2D2E;
+            overflow:hidden;
+        }
+    </style>
+    <script type="text/javascript" src="SkyRTC-client.js"></script>
+    <script type="text/javascript" src="jquery-1.10.2.js"></script>
+    <script src="jquery-ui-1.10.1.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="camerainfos.js"></script>
+    <script type="text/javascript" src="move.js"></script>
+    <script type="text/javascript" src="splitscreen.js"></script>
+    <script type="text/javascript">
+        var  rtc;
+        var mcu = VideoMCU();   //分屏MCU
+
+        var currRoomNum;//获取参数roomNum
+        var userID; //用户id
+        var userName; //用户姓名
+        var defaultShowVideo; //默认是否显示视频
+        var currVideoId; //当前正在使用的摄像头id
+
+        function init() {
+            currRoomNum = request("roomNum");
+            userID = request("userId");
+            userName = request("userName");
+            defaultShowVideo = request("defaultShowVideo") || "show";
+
+            //初始化RTC相关的回调函数
+            rtc = SkyRTC();
+            if(currRoomNum!=null && currRoomNum.length>0){
+                join(currRoomNum);
+            }
+        }
+
+        //连接WebSocket视频控制中心
+        function connectWSServer() {
+            if (!IsStringEmpty(currRoomNum)) {
+                //连接WebSocket服务器
+                var wsUrl = "ws:" + window.location.href.substring(window.location.protocol.length).split('#')[0];
+                rtc.connect(wsUrl, currRoomNum, userID, userName);
+                console.log("连接 WebSocket服务器:" + wsUrl, currRoomNum, userID, userName);
+            } else {
+                console.log("因参数中会议号为空，暂时不初始化websocket连接");
+            }
+        }
+
+        //加入会议室
+        function join(roomid) {
+            if (roomid == null || roomid.length == 0) {
+                console.log("roomid为空，加入会议失败");
+                return;
+            }
+
+            if (rtc.isLive()) {
+                console.log("会议已经开始，不需要再次join");
+                return;
+            }
+
+            //如果没有摄像头，需要再次指定（在不刷新页面的情况下，多次join会出现摄像头错乱，所以重新指定比较好）
+            if(currVideoId == null){
+                currVideoId = getFreeCamId();
+            }
+
+            currRoomNum = roomid;
+            setTimeout("connectWSServer()", parseInt(1200 * Math.random()));
+        }
+
+    </script>
+</head>
+<body onload="init();">
+<div id="screenContainer"/>
+</body>
+</html>

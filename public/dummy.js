@@ -25,6 +25,9 @@ req.query.apiData = "";
 req.query.roomId = "";
 req.query.fileName = "";
 req.query.logData = "";
+req.query.reqUser="";
+req.query.resToUser="";
+req.query.reqMsg="";
 process = "";
 process.cwd = "";
 

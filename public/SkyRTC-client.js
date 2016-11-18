@@ -295,6 +295,10 @@ var SkyRTC = function() {
         this.on("api", function(data){
             console.log("接收到服务器发来的命令", data);
         });
+        //此处用来接收服务端发来的消息
+        this.on("message",function(data){
+            console.log("接收到来自服务端发来的消息：reqUser["+data.reqUser+"], resToUser["+data.resToUser+"], reqMsg["+data.reqMsg+"]");
+        });
 
         this.on('ready', function() {
             console.log("开始进行ready事件处理");
